@@ -1,0 +1,399 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8">
+    <title>轮播图查询</title>
+    <meta name="renderer" content="webkit">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1">
+    <meta name="viewport"
+          content="width=device-width, initial-scale=1.0, minimum-scale=1.0, maximum-scale=1.0, user-scalable=0">
+    <link rel="stylesheet" href="../../static/layuiadmin/layui/css/layui.css" media="all">
+    <link rel="stylesheet" href="../../static/layuiadmin/style/admin.css" media="all">
+</head>
+<script type="text/html" id="imgTpl">
+    <div>
+        {{# layui.each(d.businessLicense.split(","), function(index, item){ }}
+        <img src="{{ item }}" style="height:80px" onclick="show_imgs(this)">
+        {{# }); }}
+    </div>
+</script>
+<body>
+<div class="layui-fluid">
+    <div class="layui-row layui-col-space15">
+        <div class="layui-col-md12">
+            <div class="layui-card">
+                <div class="layui-card-body">
+                    <div class="layui-card-header">基本信息</div>
+                    <div class="demoTable">
+                        <button type="button" lay-submit="" class="layui-btn layui-btn-warm" id="exportExcel" name="exportExcel">
+                            <i class="layui-icon"></i>导出Excel</button>
+                    </div>
+                    <form class="layui-form layui-col-md12" style="display: flex;align-items: center">
+                        <div class="layui-card-header">搜索用户：</div>
+                        <div class="layui-inline">
+                            <input class="layui-input" name="userPhone" id="userPhone" autocomplete="off"
+                                   placeholder="请输入用户手机号" data-type="reload">
+                        </div>
+                    </form>
+                    <table class="layui-hide" id="test-table-autowidth" lay-filter="test-table-autowidth"></table>
+                    <script type="text/html" id="barDemo">
+                        <a class="layui-btn layui-btn-danger layui-btn-mini" lay-event="seeBrandList">品牌列表</a>
+                        <a class="layui-btn layui-btn-normal" lay-event="posterManage">广告管理</a>
+                        <a class="layui-btn" lay-event="subAccount">子账号</a>
+                        <a  class="layui-btn layui-btn-warm" lay-event="userMember">会员管理</a>
+                        <a  class="layui-btn layui-btn-danger layui-btn-mini" lay-event="delUser">账号注销</a>
+                    </script>
+                    <div id="test-lpage"></div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script src="../../static/layuiadmin/layui/layui.js"></script>
+
+<script>
+    var time;
+    var gloable_pm_codes = new Array();// 勾选的pm_code集合
+    var gloable_pm_names = new Array();
+    var gloable_tels = new Array();
+    var table_data = new Array();// 表格数据缓存
+    var globalConfig = {};
+    layui.config({
+        //静态资源所在路径
+        base: '../../static/layuiadmin/'
+    }).extend({
+        //主入口模块
+        index: 'lib/index'
+    }).use(['index', 'table', 'laypage', 'form', 'layer', 'laydate','excel'], function () {
+
+        showElement(1, 10,"");
+        //复选框选中监听,将选中的id 设置到缓存数组,或者删除缓存数组
+        layui.table.on('checkbox(test-table-autowidth)', function (obj) {
+            if (obj.checked == true) {
+                if (obj.type == 'one') {
+                    gloable_pm_codes.push(obj.data.id);
+                    gloable_pm_names.push(obj.data.NAME);
+                    gloable_tels.push(obj.data.MOBILE_NO);
+                } else {
+                    for (var i = 0; i < table_data.length; i++) {
+                        gloable_pm_codes.push(table_data[i].id);
+                        gloable_pm_names.push(table_data[i].NAME);
+                        gloable_tels.push(table_data[i].MOBILE_NO);
+                    }
+                }
+            } else {
+                if (obj.type == 'one') {
+                    for (var i = 0; i < gloable_pm_codes.length; i++) {
+                        if (gloable_pm_codes[i] == obj.data.id) {
+                            gloable_pm_codes.remove(i);
+                            gloable_pm_names.remove(i);
+                            gloable_tels.remove(i);
+                        }
+                    }
+                } else {
+                    for (var i = 0; i < gloable_pm_codes.length; i++) {
+                        for (var j = 0; j < table_data.length; j++) {
+                            if (gloable_pm_codes[i] == table_data[j].id) {
+                                gloable_pm_codes.remove(i);
+                                gloable_pm_names.remove(i);
+                                gloable_tels.remove(i);
+                            }
+                        }
+                    }
+                }
+            }
+        });
+        //删除数组自定义函数
+        Array.prototype.remove = function (dx) {
+            if (isNaN(dx) || dx > this.length) {
+                return false;
+            }
+            for (var i = 0, n = 0; i < this.length; i++) {
+                if (this[i] != this[dx]) {
+                    this[n++] = this[i]
+                }
+            }
+            this.length -= 1
+        }
+        var $ = layui.$;
+        var layer = layui.layer;
+        var excel = layui.excel;
+        $('#exportExcel').on('click', function(){
+            if (gloable_pm_codes.length === 0) {
+                layer.msg("请选择用户！", {
+                    offset: '15px',
+                    icon: 5,
+                    time: 2000
+                });
+                return false;
+            }
+            if(gloable_pm_codes.length === 1){
+                gloable_pm_codes =   gloable_pm_codes.join(",1");
+            }else {
+                gloable_pm_codes =   gloable_pm_codes.join(",");
+            }
+            // 模拟从后端接口读取需要导出的数据
+            $.ajax({
+                type: 'POST',
+                url: layui.data(layui.setter.tableName)['admin_host'] + '/system/exportExcelByUser' ,
+                headers: {
+                    'Content-Type': 'application/x-www-form-urlencoded'
+                },
+                data: {
+                    "id":gloable_pm_codes
+                }
+                ,success(res) {
+                    var data = res.data;
+                    console.log(res);
+                    // 重点！！！如果后端给的数据顺序和映射关系不对，请执行梳理函数后导出
+                    data = excel.filterExportData(data, [
+                        'userName'
+                        ,'userPhone'
+                        ,'userEmail'
+                        ,'enterpriseName'
+                        ,'makeName'
+                        /*,'businessLicense'*/
+                        ,'createTime'
+                    ]);
+                    // 重点2！！！一般都需要加一个表头，表头的键名顺序需要与最终导出的数据一致
+                    data.unshift({ userName: "用户名称", userPhone: "用户电话",userEmail: '用户邮箱',enterpriseName: '企业名',makeName: '品牌名称',/*businessLicense: '营业执照',*/createTime: '创建时间'});
+
+                    var timestart = Date.now();
+                    excel.exportExcel(data, '点线圈用户信息--'+randomn()+'.xlsx', 'xlsx');
+                    location.reload();
+                }
+                ,error() {
+                    layer.alert('获取数据失败，请检查是否部署在本地服务器环境下');
+                }
+            });
+        });
+
+    });
+
+    function showElement(page, pageSize,userPhone) {
+        var table = layui.table,
+            laydate = layui.laydate,
+            laypage = layui.laypage;
+        var adminId = layui.data(layui.setter.tableName)['adminId'];
+        var userPhone = layui.$("#userPhone").val();
+
+        table.render({
+            elem: '#test-table-autowidth',
+            url: layui.data(layui.setter.tableName)['admin_host'] + '/mapAdminUser/findUser?page=' + page + '&pageSize=' + pageSize + '&userPhone=' + userPhone,
+            cellMinWidth: 80,
+            method: "POST",
+            page: false,
+            cols: [
+                [
+                    {type: 'checkbox',LAY_CHECKED: false, fixed: 'test'},
+                    {field: 'id', title: 'ID', align: 'center'},
+                    {field: 'userName', title: '姓名', align: 'center'},
+                    {field: 'userPhone', title: '账号（手机号）', align: 'center'},
+                    {field: 'userEmail', title: '邮箱', align: 'center'},
+                    {field: 'enterpriseName', title: '企业名称', align: 'center'},
+                    {field: 'makeName', title: '品牌名称', align: 'center'},
+                    {
+                        field: 'businessLicense', title: '营业执照', align: 'center',   templet: "#imgTpl", width: 300
+                    },
+                    {field: 'isMembers', title: '会员等级', align: 'center'},
+                    {field: 'starTime', title: '开始时间', align: 'center'},
+                    {field: 'endTime', title: '结束时间', align: 'center'},
+                    {fixed: 'right', title: '操作', toolbar: '#barDemo', align: 'center', width: 550}
+                ]
+            ],
+            done: function (res, curr, count) {
+                // 设置换页勾选之前的
+                table_data = res.data;
+                //在缓存中找到PM_CODE ,然后设置data表格中的选中状态
+                //循环所有数据，找出对应关系，设置checkbox选中状态
+                for (var i = 0; i < res.data.length; i++) {
+                    for (var j = 0; j < gloable_pm_codes.length; j++) {
+                        if (res.data[i].id == gloable_pm_codes[j]) {
+                            //这里才是真正的有效勾选
+                            res.data[i]["LAY_CHECKED"] = 'true';
+                            //找到对应数据改变勾选样式，呈现出选中效果
+                            var index = res.data[i]['LAY_TABLE_INDEX'];
+                            layui.$('.layui-table tr[data-index=' + index + '] input[type="checkbox"]').prop('checked', true);
+                            layui.$('.layui-table tr[data-index=' + index + '] input[type="checkbox"]').next().addClass('layui-form-checked');
+                        }
+                    }
+                }
+                //设置全选checkbox的选中状态，只有改变LAY_CHECKED的值， table.checkStatus才能抓取到选中的状态
+                var checkStatus = layui.table.checkStatus('test-table-autowidth');
+                if (checkStatus.isAll) {
+                    layui.$(' .layui-table-header th[data-field="0"] input[type="checkbox"]').prop('checked', true);
+                    layui.$('.layui-table-header th[data-field="0"] input[type="checkbox"]').next().addClass('layui-form-checked');
+                }
+                laypage.render({
+                    elem: 'test-lpage',
+                    count: res['count'],
+                    curr: page,
+                    limit: pageSize,
+                    layout: ['prev', 'page', 'next', 'skip', 'count', 'limit'],
+                    jump: function (obj, first) {
+                        if (first) {
+                            return;
+                        }
+                        var userPhone = layui.$("#userPhone").val();
+                        showElement(obj.curr, obj.limit,userPhone);
+                    }
+                });
+            }
+
+
+        });
+        layui.table.on('tool(test-table-autowidth)', function (obj) {
+            var data = obj.data;
+            var id = data.id;
+            var userPhone = data.userPhone;
+            var isMembers = data.isMembers;
+            var starTime = data.starTime;
+            var endTime = data.endTime;
+            if (obj.event === 'seeBrandList') {
+                layer.open({
+                    type: 2,
+                    title: '品牌列表',
+                    maxmin: true,
+                    area: ['1000px', '600px'],
+                    shadeClose: false, //点击遮罩关闭
+                    shade: 0,
+                    content: 'seeBrandList',
+                    success: function (layero, index) {
+                        var body = layer.getChildFrame('body', index);
+                        body.contents().find("#id").val(id);
+                    }
+                });
+            } else if (obj.event === 'posterManage') {
+                layer.open({
+                    type: 2,
+                    title: '广告管理',
+                    maxmin: true,
+                    area: ['900px', '600px'],
+                    shadeClose: false, //点击遮罩关闭
+                    shade: 0,
+                    content: 'posterManage',
+                    success: function (layero, index) {
+                        var body = layer.getChildFrame('body', index);
+                        body.contents().find("#id").val(id);
+                    }
+                });
+            } else if (obj.event === 'subAccount'){
+                layer.open({
+                    type: 2,
+                    title: '子账号',
+                    maxmin: true,
+                    area: ['900px', '600px'],
+                    shadeClose: false, //点击遮罩关闭
+                    shade: 0,
+                    content: 'subAccount',
+                    success: function (layero, index) {
+                        var body = layer.getChildFrame('body', index);
+                        body.contents().find("#id").val(id);
+                    }
+                });
+            }else if (obj.event === 'userMember'){
+                layer.open({
+                    type: 2,
+                    title: '会员管理',
+                    maxmin: true,
+                    area: ['900px', '600px'],
+                    shadeClose: false, //点击遮罩关闭
+                    shade: 0,
+                    content: 'userMember',
+                    success: function (layero, index) {
+
+                        var body = layer.getChildFrame('body', index);
+                        body.contents().find("#id").val(id);
+                        body.contents().find("#isMembers").val(isMembers);
+                        body.contents().find("#starTime").val(starTime);
+                        body.contents().find("#endTime").val(endTime);
+                    }
+                });
+            }else if (obj.event === 'delUser'){
+                layer.confirm('确定要注销该账户吗?', function (index) {
+                    layui.$.ajax({
+                        type: 'POST',
+                        url: layui.data(layui.setter.tableName)['admin_host'] + '/system/delUser?id=' + id+'&userPhone='+userPhone,
+                        headers: {
+                            'Content-Type': 'application/x-www-form-urlencoded'
+                        },
+                        data: null,
+                        success: function (resp) {
+                            showElement(1, 10);
+                        }
+                    });
+                    layui.layer.close(index);
+                });
+            }
+        });
+        layui.$('#btn-add').on('click', function () {
+            if(data1 == 5 ){
+                return layer.msg('只允许上传五张轮播图片');
+            }else {
+                layer.open({
+                    type: 2,
+                    title: '添加轮播图',
+                    maxmin: true,
+                    area: ['800px', '600px'],
+                    shadeClose: false, //点击遮罩关闭
+                    shade: 0,
+                    content: 'carouselAdd'
+                });
+            }
+        });
+
+
+        layui.$("#userPhone").bind("input", function (e) {
+            clearTimeout(time);
+            time = setTimeout(function () {
+                var type = layui.$("#userPhone").data('type');
+                active[type] ? active[type].call(this) : '';
+            }, 1000);
+        });
+        var active = {
+            reload: function () {
+                var userPhone = layui.$("#userPhone").val();
+                //执行重载
+                layui.table.reload('test-table-autowidth', {
+                    url: layui.data(layui.setter.tableName)['admin_host'] + '/mapAdminUser/findUser',
+                    method: 'POST'
+                    , where: { //类似于 data
+                        userPhone: userPhone,
+                        page: 1,
+                        pageSize: 10
+                    }
+                });
+            }
+        };
+
+
+
+    }
+
+    function show_imgs(t) {
+        var t = layui.$(t);
+        //页面层
+        layui.layer.open({
+            type: 1,
+            skin: 'layui-layer-rim', //加上边框
+            area: ['50%', '50%'], //宽高
+            shadeClose: true, //开启遮罩关闭
+            end: function (index, layero) {
+                return false;
+            },
+            content: '<div style="text-align:center"><img src="' + layui.$(t).attr('src') + '" /></div>'
+        });
+    }
+
+
+    function randomn() {
+        var day2 = new Date();
+        day2.setTime(day2.getTime());
+        var s2 = day2.getFullYear()+"-" + (day2.getMonth()+1) + "-" + day2.getDate();
+        return s2;
+    }
+
+</script>
+</body>
+</html>

@@ -1,0 +1,198 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="com.pointcoil.mapper.MapUserMapper">
+
+ <!--   <cache type="com.pointcoil.conf.MybatisRedisCache">
+        <property name="eviction" value="LRU" />
+        <property name="flushInterval" value="6000000" />
+        <property name="size" value="1024" />
+        <property name="readOnly" value="false" />
+    </cache>-->
+
+    <insert id="register">
+        insert tbl_user
+        <set>
+            <trim suffixOverrides=",">
+                id = replace(uuid(),'-',''),
+                <if test="registerDTO.userName!='' and registerDTO.userName!=null">
+                    user_name = #{registerDTO.userName},
+                </if>
+                <if test="registerDTO.userPhone!='' and registerDTO.userPhone!=null">
+                    user_phone = #{registerDTO.userPhone},
+                </if>
+                <if test="registerDTO.userEmail!='' and registerDTO.userEmail!=null">
+                    user_email = #{registerDTO.userEmail},
+                </if>
+                 <if test="registerDTO.enterpriseName!='' and registerDTO.enterpriseName!=null">
+                     enterprise_name = #{registerDTO.enterpriseName},
+                </if>
+                <if test="registerDTO.makeName!='' and registerDTO.makeName!=null">
+                    make_name = #{registerDTO.makeName},
+                </if>
+                <if test="registerDTO.businessLicense!='' and registerDTO.businessLicense!=null">
+                    businessLicense = #{registerDTO.businessLicense},
+                </if>
+            </trim>
+        </set>
+    </insert>
+    <select id="login" resultType="com.pointcoil.dto.map.MapCommonDTO">
+        select id as userId,is_members as token from tbl_user where user_phone = #{loginDTO.phoneNumber} and to_examine = '1'
+    </select>
+    <select id="isRegister" resultType="int">
+        select count(1) from tbl_user where user_name = #{registerDTO.userName} and user_phone=#{registerDTO.userPhone} and enterprise_name=#{registerDTO.enterpriseName}
+    </select>
+    <select id="selectMember" resultType="com.pointcoil.dto.map.MemberDTO">
+        select member_id,member_level,business_num,brand_num,label_num,sub_account_num,two_element,one_element,customized_server from tbl_member ORDER BY member_level
+    </select>
+    <select id="myBusinessZone" resultType="com.pointcoil.dto.map.MyBusinessZoneDTO$MyBusinessZone">
+        select business_id,business_name,business_open,business_unsold from tbl_business where user_id =#{mapCommonDTO.userId,jdbcType=VARCHAR} and brand_id = #{mapCommonDTO.brandId,jdbcType=VARCHAR}
+        <if test="mapCommonDTO.cityName !='' and mapCommonDTO.cityName != null">
+            and city  = #{mapCommonDTO.cityName}
+        </if>
+        and business_type != 3
+         order by create_time desc
+    </select>
+    <select id="myBusinessZoneCity" resultType="com.pointcoil.dto.map.MyBusinessZoneDTO$MyBusinessZoneCity">
+        select city as cityName, count(0) as businessCount from tbl_business where
+          user_id =#{mapCommonDTO.userId,jdbcType=VARCHAR}
+          and brand_id = #{mapCommonDTO.brandId,jdbcType=VARCHAR}
+          and business_type != 3
+          GROUP BY city
+    </select>
+    <insert id="createSubAccount">
+        insert tbl_user
+        <set>
+            id = #{mapSubAccountDTO.id,jdbcType=VARCHAR},
+            user_name = #{mapSubAccountDTO.accountName,jdbcType=VARCHAR},
+            user_phone = #{mapSubAccountDTO.accountPhone,jdbcType=VARCHAR},
+            user_email =#{mapSubAccountDTO.accountEmail,jdbcType=VARCHAR},
+            sex = #{mapSubAccountDTO.accountSex,jdbcType=INTEGER},
+            parent_id = #{mapSubAccountDTO.userId,jdbcType=VARCHAR},
+            is_members = (select a.is_members from (select is_members from tbl_user  where id = #{mapSubAccountDTO.userId,jdbcType=VARCHAR}) as a ),
+            to_examine = '1',
+            star_time = #{timeDTO.starTime},
+            end_time = #{timeDTO.endTime}
+        </set>
+    </insert>
+    <select id="selectMySubAccount" resultType="com.pointcoil.dto.map.MapSubAccountDTO$SubAccountDTO">
+        select id , user_name as accountName ,user_phone as accountPhone,user_email as accountEmail,sex as accountSex from tbl_user where parent_id =#{mapSubAccountDTO.userId,jdbcType=VARCHAR} order by create_time
+    </select>
+    <delete id="deleteSubAccount">
+        delete from tbl_user where id =#{subAccountDTO.subAccountId,jdbcType=VARCHAR}
+    </delete>
+    <insert id="customizedService">
+        insert
+        tbl_customized_service
+        <set>
+            id = replace(uuid(),'-',''),
+            name = #{customizedServiceDTO.name,jdbcType=VARCHAR},
+            telephone = #{customizedServiceDTO.telephone,jdbcType=VARCHAR},
+            content = #{customizedServiceDTO.content,jdbcType=VARCHAR},
+            user_id = #{customizedServiceDTO.userId,jdbcType=VARCHAR}
+        </set>
+    </insert>
+    <select id="myConcern" resultType="java.util.Map">
+	    select DISTINCT user_name as userName,six,telephone,city, brand_name as brandName from tbl_smallpro_user ,tbl_business_user
+        where tbl_smallpro_user.open_id = tbl_business_user.open_id
+        and tbl_business_user.user_id =#{mapCommonDTO.userId,jdbcType=VARCHAR}
+    </select>
+   <!-- <select id="pieChartByMan" resultType="java.util.Map">
+        select count(1) as value ,'男' as name from tbl_smallpro_user where six = 1
+        and open_id in (
+ select open_id from tbl_business_user where reportId in (
+select report_id from tbl_business where brand_id = #{mapCommonDTO.brandId,jdbcType=VARCHAR}
+)
+ )
+    </select>-->
+    <select id="pieChartByMan" resultType="java.util.Map">
+        select count(1) as value ,'男' as name from tbl_smallpro_user where six = 1
+         and open_id in (
+          select open_id from tbl_business_user where reportId in (
+           select report_id from tbl_business where brand_id in (select brand_id from tbl_brand where user_id = #{mapCommonDTO.userId,jdbcType=VARCHAR} )
+           )
+           )
+    </select>
+    <select id="pieChartByWoMan" resultType="java.util.Map">
+        select count(1) as value , '女' as name from tbl_smallpro_user where six = 2 and open_id in (
+        select open_id from tbl_business_user where reportId in (
+         select report_id from tbl_business where brand_id in (select brand_id from tbl_brand where user_id = #{mapCommonDTO.userId,jdbcType=VARCHAR})
+         )
+         )
+    </select>
+   <!-- <select id="pieChartByWoMan" resultType="java.util.Map">
+        select count(1) as value , '女' as name from tbl_smallpro_user where six = 2 and open_id in (
+ select open_id from tbl_business_user where reportId in (
+select report_id from tbl_business where brand_id = #{mapCommonDTO.brandId,jdbcType=VARCHAR}
+)
+ )
+    </select>-->
+   <!-- <select id="distributionMap" resultType="com.pointcoil.dto.map.DistributionMapDTO">
+    select count(1) as value, city as name from tbl_smallpro_user where open_id in
+		(select open_id from tbl_business_user where reportId in
+		(select report_id from tbl_business where brand_id =#{mapCommonDTO.brandId,jdbcType=VARCHAR})) group by city
+    </select>-->
+    <select id="distributionMap" resultType="com.pointcoil.dto.map.DistributionMapDTO">
+        select count(1) as value, city as name from tbl_smallpro_user where open_id in
+                                                                            (select open_id from tbl_business_user where reportId in
+                                                                                                                         (select report_id from tbl_business where brand_id in (select brand_id from tbl_brand where user_id = #{mapCommonDTO.userId,jdbcType=VARCHAR} ))) group by city
+
+    </select>
+    <select id="selectCity" resultType="com.pointcoil.dto.map.DistributionMapDTO$DistributionMapCity">
+        select shortName , longitude ,latitude from tbl_provinces where pinyin = #{name} limit 1
+    </select>
+    <select id="selectParentId" resultType="java.lang.String">
+        select parent_id  from tbl_user where id = #{userId}
+    </select>
+    <select id="selectTime" resultType="com.pointcoil.dto.map.TimeDTO">
+        select star_time as starTime,end_time as endTime from tbl_user where id = #{userId}
+    </select>
+    <select id="selectAccountPhone" resultType="java.lang.String">
+        select user_phone from tbl_user where id = #{subAccountDTO.subAccountId}
+    </select>
+    <select id="selectAllUser" resultType="com.pointcoil.dto.map.TaskDTO">
+        select id,end_time as endTime from tbl_user where is_members > 0 and parent_id  = 0
+    </select>
+    <update id="deleteMembers">
+        update tbl_user
+        <set>
+            is_members = 0,
+            star_time = '',
+            end_time =''
+        </set>
+        where id = #{id} or parent_id = #{id}
+    </update>
+    <select id="selectMemberByUserId" resultType="com.pointcoil.dto.map.TimeDTO">
+        select star_time,end_time from tbl_user where id = #{userId}
+    </select>
+    <select id="myConcernBySonId" resultType="java.util.Map">
+        select DISTINCT user_name as userName,six,telephone,city, brand_name as brandName from tbl_smallpro_user ,tbl_business_user
+        where tbl_smallpro_user.open_id = tbl_business_user.open_id
+        and son_id =#{mapCommonDTO.sonId,jdbcType=VARCHAR}
+    </select>
+    <update id="updateMember">
+        update tbl_user
+        <set>
+            is_members = 1,
+            star_time = #{startTime},
+            end_time = #{endTime}
+        </set>
+        where id = #{id}
+    </update>
+    <select id="findOneCity" resultType="java.lang.String">
+        select city from tbl_city_data where city_level = #{level}
+    </select>
+    <select id="memberCityInit" resultMap="memberCity">
+        select DISTINCT province from tbl_city_data where city_level not in ('一线','新一线','二线','')
+    </select>
+    <resultMap id="memberCity" type="com.pointcoil.dto.map.CityDTO">
+        <result property="province" column="province"/>
+        <collection property="cityName" javaType="ArrayList" column="{province=province}"
+                    select="selectCityByProvince"></collection>
+    </resultMap>
+    <select id="selectCityByProvince" resultType="java.lang.String">
+        select city from tbl_city_data where province = #{province} and city_level not in ('','一线','新一线','二线')
+
+    </select>
+
+
+</mapper>

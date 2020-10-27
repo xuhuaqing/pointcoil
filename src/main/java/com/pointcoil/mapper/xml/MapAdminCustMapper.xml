@@ -1,0 +1,36 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.pointcoil.mapper.MapAdminCustMapper">
+
+
+    <select id="findCustomized" resultType="com.pointcoil.entity.CustomizedEntity">
+			select tbl_customized_service.id,name,telephone,content,user_id,user_name from tbl_customized_service , tbl_user
+			where tbl_customized_service.user_id = tbl_user.id
+    </select>
+    <delete id="delCustomized">
+        delete from tbl_customized_service where id = #{id,jdbcType=VARCHAR}
+    </delete>
+    <insert id="updateExcel">
+        insert into tbl_customized
+        values
+        <foreach collection="list" item="list"  index="index" separator=",">
+            (replace(uuid(),'-',''),#{list.type},#{list.lonAndLat},#{list.radius},#{brandId})
+        </foreach>
+    </insert>
+    <insert id="updateExcelByLabel">
+        insert into tbl_label
+        (label_id,user_id,brand_id,label_name,label_remarks,label_style_id,lat_and_lng)
+        values
+        <foreach collection="list" item="list"  index="index" separator=",">
+            (
+            replace(uuid(),'-',''),
+            #{userId},
+            #{brandId},
+            #{list.labelName},
+            '',
+            #{list.labelStyleId},
+            #{list.latAndLng}
+            )
+        </foreach>
+    </insert>
+</mapper>

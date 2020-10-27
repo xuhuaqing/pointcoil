@@ -1,0 +1,330 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8">
+    <title>热力图规则</title>
+    <meta name="renderer" content="webkit">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1">
+    <meta name="viewport"
+          content="width=device-width, initial-scale=1.0, minimum-scale=1.0, maximum-scale=1.0, user-scalable=0">
+    <link rel="stylesheet" href="../../static/layuiadmin/layui/css/layui.css" media="all">
+    <link rel="stylesheet" href="../../static/layuiadmin/style/admin.css" media="all">
+</head>
+<body>
+<div class="layui-fluid">
+    <div id="upload" style="position:fixed;z-index:9999;display:none;top: 300px;bottom: 0;left: 1000px;right: 0;">
+        <img src="../../static/timg.gif">
+    </div>
+
+    <div class="layui-row layui-col-space15">
+        <div class="layui-col-md12">
+            <div class="layui-card">
+                <div class="layui-card-header">热力图规则
+                    <!-- -->
+                </div>
+                <button class="layui-btn layui-btn-sm" lay-event="beHot1" id="exportExcel">添加城市</button>
+                <button class="layui-btn layui-btn-sm" lay-event="beHot" id="allcity">全选</button>
+                <div class="layui-card-body">
+                    <form class="layui-form layui-col-md12" style="display: flex;align-items: center">
+                        <p><input id="userId" name="userId" type="hidden">
+                        <div class="layui-card-header">搜索城市：</div>
+                        <div class="layui-inline">
+                            <input class="layui-input" name="city" id="city" autocomplete="off"
+                                   placeholder="请输入城市" data-type="reload">
+                        </div>
+                    </form>
+                    <table class="layui-hide" id="test-table-autowidth" lay-filter="test-table-autowidth"></table>
+                  <!--  <script type="text/html" id="toolbarDemo">
+                        <div class="layui-btn-container">
+
+                            &lt;!&ndash; <button class="layui-btn layui-btn-sm" lay-event="bePopular">成为流行模块商品</button>&ndash;&gt;
+                        </div>
+                    </script>-->
+                   <!-- <script type="text/html" id="barDemo">
+                        <a class="layui-btn layui-btn-normal" lay-event="seeCityList1">办公热力规则</a>
+                        <a class="layui-btn layui-btn-normal" lay-event="seeCityList2">社区热力规则</a>
+                        <a class="layui-btn layui-btn-normal" lay-event="seeCityList3">商业热力规则</a>
+                    </script>-->
+                    <div id="test-lpage"></div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+<script src="../../static/layuiadmin/layui/layui.js"></script>
+
+<script>
+      var time;
+      var globalConfig = {};
+      var gloable_pm_codes = new Array();// 勾选的pm_code集合
+      var gloable_pm_names = new Array();
+      var gloable_tels = new Array();
+      var table_data = new Array();// 表格数据缓存
+      var globalConfig = {};
+    layui.config({
+        //静态资源所在路径
+        base: '../../static/layuiadmin/'
+    }).extend({
+        //主入口模块
+        index: 'lib/index'
+    }).use(['index', 'table', 'laypage', 'form', 'layer', 'laydate','upload','element'], function () {
+
+        showElement(1, 10,"");
+
+
+        //复选框选中监听,将选中的id 设置到缓存数组,或者删除缓存数组
+        layui.table.on('checkbox(test-table-autowidth)', function (obj) {
+            if (obj.checked == true) {
+                if (obj.type == 'one') {
+                    gloable_pm_codes.push(obj.data.id);
+                    gloable_pm_names.push(obj.data.NAME);
+                    gloable_tels.push(obj.data.MOBILE_NO);
+                } else {
+                    for (var i = 0; i < table_data.length; i++) {
+                        gloable_pm_codes.push(table_data[i].id);
+                        gloable_pm_names.push(table_data[i].NAME);
+                        gloable_tels.push(table_data[i].MOBILE_NO);
+                    }
+                }
+            } else {
+                if (obj.type == 'one') {
+                    for (var i = 0; i < gloable_pm_codes.length; i++) {
+                        if (gloable_pm_codes[i] == obj.data.id) {
+                            gloable_pm_codes.remove(i);
+                            gloable_pm_names.remove(i);
+                            gloable_tels.remove(i);
+                        }
+                    }
+                } else {
+                    for (var i = 0; i < gloable_pm_codes.length; i++) {
+                        for (var j = 0; j < table_data.length; j++) {
+                            if (gloable_pm_codes[i] == table_data[j].id) {
+                                gloable_pm_codes.remove(i);
+                                gloable_pm_names.remove(i);
+                                gloable_tels.remove(i);
+                            }
+                        }
+                    }
+                }
+            }
+        });
+        //删除数组自定义函数
+        Array.prototype.remove = function (dx) {
+            if (isNaN(dx) || dx > this.length) {
+                return false;
+            }
+            for (var i = 0, n = 0; i < this.length; i++) {
+                if (this[i] != this[dx]) {
+                    this[n++] = this[i]
+                }
+            }
+            this.length -= 1
+        }
+
+
+
+
+        layui.$('#exportExcel').on('click', function(){
+            if (gloable_pm_codes.length === 0) {
+                layer.msg("请选择城市！", {
+                    offset: '15px',
+                    icon: 5,
+                    time: 2000
+                });
+                return false;
+            }
+            if(gloable_pm_codes.length === 1){
+                gloable_pm_codes =   gloable_pm_codes.join(",1");
+            }else {
+                gloable_pm_codes =   gloable_pm_codes.join(",");
+            }
+            layer.open({
+                type: 2,
+                title: '设置时间',
+                maxmin: true,
+                area: ['1000px', '600px'],
+                shadeClose: false, //点击遮罩关闭
+                shade: 0,
+                content: 'thermodynamicUserAdd',
+                success: function (layero, index) {
+                    var body = layer.getChildFrame('body', index);
+                    var userId = layui.$("#userId").val();
+                    body.contents().find("#cityName").val(gloable_pm_codes);
+                    body.contents().find("#userId").val(userId);
+                }
+            });
+        });
+
+        layui.$('#allcity').on('click',function () {
+            layer.open({
+                type: 2,
+                title: '设置时间',
+                maxmin: true,
+                area: ['1000px', '600px'],
+                shadeClose: false, //点击遮罩关闭
+                shade: 0,
+                content: 'thermodynamicUserAdd',
+                success: function (layero, index) {
+                    var body = layer.getChildFrame('body', index);
+                    var userId = layui.$("#userId").val();
+                    body.contents().find("#cityName").val(0);
+                    body.contents().find("#userId").val(userId);
+                }
+            });
+        })
+
+
+
+
+        var upload = layui.upload,
+            element = layui.element,
+            layer = layui.layer;
+        $= layui.$;
+    });
+
+    function showElement(page, pageSize,city) {
+
+        var table = layui.table,
+            laydate = layui.laydate,
+            laypage = layui.laypage;
+        var adminId = layui.data(layui.setter.tableName)['adminId'];
+        var city = layui.$("#city").val();
+
+        table.render({
+            elem: '#test-table-autowidth',
+            url: layui.data(layui.setter.tableName)['admin_host'] + '/system/findThermodynamic?page='+page+'&pageSize='+pageSize+'&city='+city,
+            //url: 'http://localhost:8080/pointcoil' + '/system/findThermodynamic?page='+page+'&pageSize='+pageSize+'&city='+city,
+            cellMinWidth: 80,
+            method: "POST",
+            page: false,
+            toolbar: '#toolbarDemo',
+            cols: [
+                [
+                    {type: 'checkbox',LAY_CHECKED: false, fixed: 'test'},
+                    {field: 'id', title: 'ID', align: 'center'},
+                    {field: 'cityName', title: '城市名称', align: 'center'},
+                    {field: 'mergerName', title: '所属省份',edit: 'text', align: 'center'},
+                    {field: 'pinyin', title: 'pinyin',edit: 'text', align: 'center'}
+                ]
+            ],
+            done: function (res, curr, count) {
+                // 设置换页勾选之前的
+                table_data = res.data;
+                for (var i = 0; i < res.data.length; i++) {
+                    for (var j = 0; j < gloable_pm_codes.length; j++) {
+                        if (res.data[i].id == gloable_pm_codes[j]) {
+                            //这里才是真正的有效勾选
+                            res.data[i]["LAY_CHECKED"] = 'true';
+                            //找到对应数据改变勾选样式，呈现出选中效果
+                            var index = res.data[i]['LAY_TABLE_INDEX'];
+                            layui.$('.layui-table tr[data-index=' + index + '] input[type="checkbox"]').prop('checked', true);
+                            layui.$('.layui-table tr[data-index=' + index + '] input[type="checkbox"]').next().addClass('layui-form-checked');
+                        }
+                    }
+                }
+                //设置全选checkbox的选中状态，只有改变LAY_CHECKED的值， table.checkStatus才能抓取到选中的状态
+                var checkStatus = layui.table.checkStatus('test-table-autowidth');
+                if (checkStatus.isAll) {
+                    layui.$(' .layui-table-header th[data-field="0"] input[type="checkbox"]').prop('checked', true);
+                    layui.$('.layui-table-header th[data-field="0"] input[type="checkbox"]').next().addClass('layui-form-checked');
+                }
+                laypage.render({
+                    elem: 'test-lpage',
+                    count: res['count'],
+                    curr: page,
+                    limit: pageSize,
+                    layout: ['prev', 'page', 'next', 'skip', 'count', 'limit'],
+                    jump: function (obj, first) {
+                        if (first) {
+                            return;
+                        }
+                        showElement(obj.curr, obj.limit);
+                    }
+                });
+            }
+        });
+
+        layui.table.on('tool(test-table-autowidth)', function (obj) {
+            var data = obj.data;
+            var cityName = data.cityName;
+            if (obj.event === 'seeCityList1') {
+                layer.open({
+                    type: 2,
+                    title: '办公热力规则',
+                    maxmin: true,
+                    area: ['1000px', '600px'],
+                    shadeClose: false, //点击遮罩关闭
+                    shade: 0,
+                    content: 'officeRule',
+                    success: function (layero, index) {
+                        var body = layer.getChildFrame('body', index);
+                        body.contents().find("#cityName").val(cityName);
+                        body.contents().find("#type").val(3);
+                    }
+                });
+            }else if (obj.event === 'seeCityList2') {
+                layer.open({
+                    type: 2,
+                    title: '社区热力规则',
+                    maxmin: true,
+                    area: ['1000px', '600px'],
+                    shadeClose: false, //点击遮罩关闭
+                    shade: 0,
+                    content: 'officeRule',
+                    success: function (layero, index) {
+                        var body = layer.getChildFrame('body', index);
+                        body.contents().find("#cityName").val(cityName);
+                        body.contents().find("#type").val(1);
+                    }
+                });
+
+            }else if (obj.event === 'seeCityList3') {
+                layer.open({
+                    type: 2,
+                    title: '商业热力规则',
+                    maxmin: true,
+                    area: ['1000px', '600px'],
+                    shadeClose: false, //点击遮罩关闭
+                    shade: 0,
+                    content: 'officeRule',
+                    success: function (layero, index) {
+                        var body = layer.getChildFrame('body', index);
+                        body.contents().find("#cityName").val(cityName);
+                        body.contents().find("#type").val(2);
+                    }
+                });
+            }
+        });
+
+
+
+
+
+        layui.$("#city").bind("input", function (e) {
+            clearTimeout(time);
+            time = setTimeout(function () {
+                var type = layui.$("#city").data('type');
+                active[type] ? active[type].call(this) : '';
+            }, 1000);
+        });
+        var active = {
+            reload: function () {
+                var city = layui.$("#city").val();
+                //执行重载
+                layui.table.reload('test-table-autowidth', {
+                    //url: 'http://localhost:8080/pointcoil' + '/system/findThermodynamic',
+                    url: layui.data(layui.setter.tableName)['admin_host'] + '/system/findThermodynamic',
+                    method: 'POST'
+                    , where: { //类似于 data
+                        city: city,
+                        page: 1,
+                        pageSize: 10
+                    }
+                });
+            }
+        };
+    }
+
+</script>
+</body>
+</html>

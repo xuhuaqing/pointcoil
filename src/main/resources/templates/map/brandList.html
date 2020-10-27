@@ -1,0 +1,171 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8">
+    <title>品牌列表</title>
+    <meta name="renderer" content="webkit">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1">
+    <meta name="viewport"
+          content="width=device-width, initial-scale=1.0, minimum-scale=1.0, maximum-scale=1.0, user-scalable=0">
+    <link rel="stylesheet" href="../../static/layuiadmin/layui/css/layui.css" media="all">
+    <link rel="stylesheet" href="../../static/layuiadmin/style/admin.css" media="all">
+</head>
+<script type="text/html" id="imgTpl">
+    <div>
+        {{# layui.each(d.businessLicense.split(","), function(index, item){ }}
+        <img src="{{ item }}" style="height:80px">
+        {{# }); }}
+    </div>
+</script>
+<body>
+<form>
+    <p><input id="id" name="id" type="hidden">
+</form>
+<div class="layui-fluid">
+    <div class="layui-row layui-col-space15">
+        <div class="layui-col-md12">
+            <div class="layui-card">
+                <div class="layui-card-header">品牌列表</div>
+                <div class="layui-card-body">
+                    <table class="layui-hide" id="test-table-autowidth" lay-filter="test-table-autowidth"></table>
+                    <script type="text/html" id="barDemo">
+                        <a class="layui-btn layui-btn-danger layui-btn-mini" lay-event="seeBusinessList">商圈列表</a>
+                        <a class="layui-btn layui-btn-danger layui-btn-mini" lay-event="seeLabelList">标签列表</a>
+                    </script>
+                    <div id="test-lpage"></div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script src="../../static/layuiadmin/layui/layui.js"></script>
+
+<script>
+    layui.config({
+        //静态资源所在路径
+        base: '../../static/layuiadmin/'
+    }).extend({
+        //主入口模块
+        index: 'lib/index'
+    }).use(['index', 'table', 'laypage', 'form', 'layer', 'laydate'], function () {
+
+        showElement(1,10);
+        var data1;
+    });
+
+    function showElement(page,pageSize) {
+        var table = layui.table,
+            laydate = layui.laydate,
+            laypage = layui.laypage;
+        var adminId = layui.data(layui.setter.tableName)['adminId'];
+        var id = layui.$("#id").val();
+
+        table.render({
+            elem: '#test-table-autowidth',
+            url: layui.data(layui.setter.tableName)['admin_host'] + '/mapAdminUser/findBrandList?page=' + page + '&pageSize=' + pageSize+'&userId='+id,
+            cellMinWidth: 80,
+            method: "POST",
+            page: false,
+            cols: [
+                [
+                    {field: 'brandId', title: 'ID', align: 'center'},
+                    {field: 'brandTitle', title: '品牌标题', align: 'center'},
+                    {field: 'industryLevelOneName', title: '一级行业', align: 'center'},
+                    {field: 'industryLevelTwoName', title: '二级行业', align: 'center'},
+                    {
+                        field: 'brandImg', title: '品牌图片', align: 'center', templet: function (d) {
+                            return '<div onclick="show_img(this)" ><img src="' + d.brandImg + '" alt="" width="50px" height="50px"></a></div>';
+                        }
+                    },
+                    {fixed: 'right', title: '操作', toolbar: '#barDemo', align: 'center', width: 350}
+                ]
+            ],
+            done: function (res, curr, count) {
+                data1 = res['count'];
+                laypage.render({
+                    elem: 'test-lpage',
+                    count: res['count'],
+                    curr: page,
+                    limit: pageSize,
+                    layout: ['prev', 'page', 'next', 'skip', 'count', 'limit'],
+                    jump: function (obj, first) {
+                        if (first) {
+                            return;
+                        }
+                        showElement(obj.curr, obj.limit);
+                    }
+                });
+            }
+
+
+        });
+        layui.table.on('tool(test-table-autowidth)', function (obj) {
+            var data = obj.data;
+            var brandId = data.brandId;
+            if (obj.event === 'seeBusinessList') {
+                layer.open({
+                    type: 2,
+                    title: '商圈列表',
+                    maxmin: true,
+                    area: ['1000px', '600px'],
+                    shadeClose: false, //点击遮罩关闭
+                    shade: 0,
+                    content: 'businessList',
+                    success: function (layero, index) {
+                        var body = layer.getChildFrame('body', index);
+                        body.contents().find("#brandId").val(brandId);
+                    }
+                });
+
+            } else if (obj.event === 'seeLabelList') {
+                layer.open({
+                    type: 2,
+                    title: '标签列表',
+                    maxmin: true,
+                    area: ['1000px', '600px'],
+                    shadeClose: false, //点击遮罩关闭
+                    shade: 0,
+                    content: 'labelList',
+                    success: function (layero, index) {
+                        var body = layer.getChildFrame('body', index);
+                        body.contents().find("#brandId").val(brandId);
+                    }
+                });
+            }
+        });
+        layui.$('#btn-add').on('click', function () {
+            if(data1 == 5 ){
+                return layer.msg('只允许上传五张轮播图片');
+            }else {
+                layer.open({
+                    type: 2,
+                    title: '添加轮播图',
+                    maxmin: true,
+                    area: ['800px', '600px'],
+                    shadeClose: false, //点击遮罩关闭
+                    shade: 0,
+                    content: 'carouselAdd'
+                });
+            }
+        });
+    }
+
+    function show_img(t) {
+        var t = layui.$(t).find("img");
+        //页面层
+        layui.layer.open({
+            type: 1,
+            skin: 'layui-layer-rim', //加上边框
+            area: ['50%', '50%'], //宽高
+            shadeClose: true, //开启遮罩关闭
+            end: function (index, layero) {
+                return false;
+            },
+            content: '<div style="text-align:center"><img src="' + layui.$(t).attr('src') + '" /></div>'
+        });
+    }
+
+</script>
+</body>
+</html>

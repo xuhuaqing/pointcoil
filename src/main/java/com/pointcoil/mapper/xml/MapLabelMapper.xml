@@ -1,0 +1,170 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+
+<mapper namespace="com.pointcoil.mapper.MapLabelMapper">
+  <!--  <cache type="com.pointcoil.conf.MybatisRedisCache">
+        <property name="eviction" value="LRU" />
+        <property name="flushInterval" value="6000000" />
+        <property name="size" value="1024" />
+        <property name="readOnly" value="false" />
+    </cache>-->
+
+
+    <select id="showLabelStyle" resultType="com.pointcoil.dto.map.LabelStyleDTO">
+        select label_style_id , label_style_img from tbl_label_style
+    </select>
+    <select id="selectCreateLabelNum" resultType="java.lang.Integer">
+        select count(1) from tbl_label where user_id = #{labelDTO.userId,jdbcType=VARCHAR}
+    </select>
+    <insert id="createLabel">
+        insert tbl_label
+        <set>
+            <trim suffixOverrides=",">
+                label_id = #{replace,jdbcType=VARCHAR} ,
+                <if test="labelDTO.brandId != null and labelDTO.brandId != ''">
+                    brand_id = #{labelDTO.brandId,jdbcType=VARCHAR},
+                </if>
+                <if test="labelDTO.userId != null and labelDTO.userId != '' ">
+                    user_id = #{labelDTO.userId,jdbcType=VARCHAR},
+                </if>
+                <if test="labelDTO.labelName != null and labelDTO.labelName != ''">
+                    label_name = #{labelDTO.labelName,jdbcType=VARCHAR},
+                </if>
+                <if test="labelDTO.labelRemarks != null and labelDTO.labelRemarks != ''">
+                    label_remarks = #{labelDTO.labelRemarks,jdbcType=VARCHAR},
+                </if>
+                <if test="labelDTO.labelStyleId != null and labelDTO.labelStyleId != ''">
+                    label_style_id = #{labelDTO.labelStyleId,jdbcType=VARCHAR},
+                </if>
+                <if test="toJSONString != null and toJSONString != ''">
+                    lat_and_lng = #{toJSONString,jdbcType=VARCHAR},
+                </if>
+            </trim>
+        </set>
+    </insert>
+
+
+    <select id="showLabel" resultMap="showLabel">
+        select label_id,user_id,brand_id,label_name,label_remarks,lat_and_lng,tbl_label_style.label_style_id,label_style_img from tbl_label , tbl_label_style
+        <where>
+         tbl_label.label_style_id = tbl_label_style.label_style_id
+            <if test="showLabel.brandId != null and showLabel.brandId != ''">
+                and brand_id =#{showLabel.brandId,jdbcType=VARCHAR}
+            </if>
+            <if test="showLabel.labelName != null and showLabel.labelName.size>0">
+                and  label_name in
+                <foreach collection="showLabel.labelName" item="labelName" separator="," open="(" close=")">
+                    #{labelName}
+                </foreach>
+            </if>
+        </where>
+    </select>
+
+    <resultMap id="showLabel" type="com.pointcoil.dto.map.LabelDTO$ShowLabelDTO">
+        <id property="labelId" column="label_id"/>
+        <result property="userId" column="user_id"/>
+        <result property="brandId" column="brand_id"/>
+        <result property="labelName" column="label_name"/>
+        <result property="labelRemarks" column="label_remarks"/>
+        <result property="latAndLng" column="lat_and_lng"/>
+        <result property="labelStyleId" column="label_style_id"/>
+        <result property="labelStyleImg" column="label_style_img"/>
+    </resultMap>
+
+
+
+
+    <delete id="deleteLabel">
+        delete from tbl_label where label_id = #{labelId.labelId,jdbcType=VARCHAR}
+    </delete>
+    <select id="selectLabelById" resultType="com.pointcoil.dto.map.LabelDTO$SelectLabelById">
+        select label_id , user_id ,label_name ,label_remarks ,tbl_label_style.label_style_id,label_style_img from
+        tbl_label , tbl_label_style
+        <where>
+        tbl_label.label_style_id = tbl_label_style.label_style_id
+            and label_id = #{labelId.labelId,jdbcType=VARCHAR}
+        </where>
+    </select>
+    <update id="updateLabelById">
+        update tbl_label
+        <set>
+            <trim suffixOverrides=",">
+                <if test="updateLabel.labelName != null  and updateLabel.labelName != ''">
+                    label_name = #{updateLabel.labelName,jdbcType=VARCHAR},
+                </if>
+                <if test="updateLabel.labelRemarks != null  and updateLabel.labelRemarks != ''">
+                    label_remarks = #{updateLabel.labelRemarks,jdbcType=VARCHAR},
+                </if>
+                <if test="updateLabel.labelStyleId != null  and updateLabel.labelStyleId != ''">
+                    label_style_id = #{updateLabel.labelStyleId,jdbcType=VARCHAR},
+                </if>
+            </trim>
+        </set>
+        where
+        label_id =#{updateLabel.labelId}
+    </update>
+    <insert id="addLabel">
+        insert tbl_label_style
+        <set>
+            label_style_id = replace(uuid(),'-',''),
+            label_style_img = #{s,jdbcType=VARCHAR}
+        </set>
+    </insert>
+    <update id="upd">
+        update tbl_thermodynamic_data
+        <set>
+            commentNumber = commentNumber+1
+        </set>
+        where id = 100001644
+    </update>
+    <insert id="labelAdd">
+        insert tbl_label_style
+        <set>
+            label_style_id = replace(uuid(),'-',''),
+            label_style_img = #{carouselImageUrl}
+        </set>
+    </insert>
+    <update id="clear">
+        update tbl_core
+        <set>
+            count = count +1
+        </set>
+        where id = 1
+    </update>
+    <select id="selectLabelStyleById" resultType="java.lang.String">
+        select label_style_img from tbl_label_style where label_style_id = #{labelStyleId}
+    </select>
+    <select id="selectHeatMap" resultType="java.util.Map">
+       select firstClassClassification,twoLevelClassification,threeLevelClassification,minCount from tbl_thermodynamic_rule where thermodynamic_id = #{id} and city = '杭州市'
+    </select>
+    <select id="selectCity" resultType="java.lang.String">
+        select cityName from tbl_provinces where depth = 2 and cityName != '杭州市' and  cityName != '湖州市'
+    </select>
+    <insert id="insertRule">
+        insert into tbl_thermodynamic_rule
+        (id,thermodynamic_id,firstClassClassification,twoLevelClassification,threeLevelClassification,minCount,city)
+        values
+        <foreach collection="s" item="s" index="index" separator=",">
+            (
+            REPLACE(UUID(),"-",""),
+            #{id,jdbcType=VARCHAR},
+            #{m.firstClassClassification},
+            #{m.twoLevelClassification},
+            #{m.threeLevelClassification},
+            #{m.minCount},
+            #{s}
+            )
+        </foreach>
+    </insert>
+    <select id="createLabelShowBusinessName" resultType="java.util.Map">
+        select /*DISTINCT*/ label_name as name ,label_id as labelId from tbl_label where user_id = #{mapCommonDTO.userId,jdbcType=VARCHAR} and brand_id =#{mapCommonDTO.brandId,jdbcType=VARCHAR}
+        order by create_time desc
+    </select>
+    <select id="selectLabelName" resultType="java.lang.Integer">
+        select count(1) from tbl_label
+        where user_id = #{labelDTO.userId,jdbcType=VARCHAR} and brand_id =#{labelDTO.brandId,jdbcType=VARCHAR}
+        and label_name = #{labelDTO.labelName}
+    </select>
+
+
+</mapper>

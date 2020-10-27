@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.pointcoil.mapper.HeatMapMapper">
+
+
+    <select id="initHeatMap" resultType="java.util.Map">
+         select heat_map_name as heatMapName ,heat_map_id as heatMapId ,type as heatType  from tbl_heat_map
+    </select>
+</mapper>

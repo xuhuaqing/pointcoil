@@ -1,0 +1,23 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.pointcoil.mapper.SmallProMapper">
+
+    <insert id="insertPreservationUser">
+            insert tbl_smallpro_user
+            <set>
+                user_id = replace(uuid(),'-',''),
+                user_name = #{user.userName},
+                open_id = #{user.openId},
+                avatar = #{user.avatar},
+                six = #{user.six},
+                telephone = #{user.phoneNumber},
+                city = #{user.city}
+            </set>
+    </insert>
+    <select id="selectOpenId" resultType="java.lang.Integer">
+        select count(1) from tbl_smallpro_user where open_id = #{openId}
+    </select>
+    <select id="findAppId" resultType="java.util.Map">
+        select appid , secret from tbl_user where appid != '' and secret != ''
+    </select>
+</mapper>

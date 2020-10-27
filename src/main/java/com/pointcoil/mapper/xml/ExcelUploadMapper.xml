@@ -1,0 +1,219 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.pointcoil.mapper.ExcelUploadMapper">
+
+    <insert id="addBaidu">
+            insert into tbl_baidu
+            values
+            <foreach collection="s" item="s"  index="index" separator=",">
+                (#{s.uid},#{s.streetId},#{s.name},#{s.address},#{s.type},#{s.tag},#{s.naviLocation},#{s.alias},#{s.detailUrl},#{s.price}
+                ,#{s.shopHours},#{s.overallRating},#{s.tasteRating},#{s.serviceRating},#{s.environmentRating},#{s.facilityRating},#{s.hygieneRating}
+                ,#{s.technologyRating},#{s.imageNum},#{s.grouponNum},#{s.discountNum},#{s.commentNum},#{s.favoriteNum},#{s.checkinNum},#{s.brand}
+                ,#{s.contentTag},#{s.featuredService},#{s.atmosphere},#{s.baidulat},#{s.baidulon},#{s.wgs84lat},#{s.wgs84lon},#{s.gcj02lat},#{s.gcj02lon})
+            </foreach>
+    </insert>
+    <insert id="addShop">
+        insert into tbl_shop
+            values
+        <foreach collection="list" item="list"  index="index" separator=",">
+           (#{list.shopId},#{list.shopName},#{list.address},#{list.shopLink},#{list.shopScore},#{list.environmentScore},#{list.serviceScore},#{list.qualityScore}
+            ,#{list.consume},#{list.commentNum},#{list.branch},#{list.country},#{list.province},#{list.city},#{list.area}
+            ,#{list.business},#{list.takeOut},#{list.telephone},#{list.oneSortName},#{list.twoSortName},#{list.totalSortName},#{list.verification}
+            ,#{list.payReserve},#{list.chinaStore} ,#{list.groupBuying},#{list.lastCommentTime} ,#{list.coordinate},#{list.frontLabel} ,#{list.negativeLabel},#{list.evaluationDistribution}
+            ,#{list.picture},#{list.shopOwnerPicture})
+        </foreach>
+    </insert>
+    <insert id="addAreYouHungry">
+           insert into tbl_areyouhungry
+            values
+        <foreach collection="list" item="list"  index="index" separator=",">
+           (#{list.id},#{list.otherIds},#{list.state},#{list.city},#{list.title},#{list.address},#{list.catName1},#{list.catName2}
+            ,#{list.telephones},#{list.mobilePhones},#{list.telephones400},#{list.openingHours},#{list.bdLng},#{list.bdLat},#{list.promotions},#{list.minDeliverFee},#{list.deliverFee}
+            ,#{list.rating},#{list.commentCount},#{list.monthSaleCount},#{list.url},#{list.chain},#{list.bdLng},#{list.bdLat})
+        </foreach>
+    </insert>
+    <insert id="addHousingWorld">
+        insert into
+         tbl_housingworld
+         values
+        <foreach collection="list" item="list"  index="index" separator=",">
+          (replace(uuid(),'-',''),#{list.name},#{list.address},#{list.region},#{list.propertyRight},#{list.property},#{list.architecturalAge},#{list.architecturalType},#{list.architecturalStructure},#{list.architecturalArea}
+            ,#{list.areaCovered},#{list.developers},#{list.houseNum},#{list.tungNum},#{list.greenRate},#{list.volumeRate},#{list.propertyFee},#{list.market},#{list.hospital},#{list.postOffice}
+            ,#{list.bank},#{list.InternalMatching},#{list.baiduLon},#{list.baiduLat},#{list.wgsLon},#{list.wgsLat},#{list.url})
+        </foreach>
+    </insert>
+    <insert id="addShopHousingWorld">
+        insert into
+        tbl_shophousingworld
+        values
+        <foreach collection="list" item="list"  index="index" separator=",">
+            (replace(uuid(),'-',''),#{list.name},#{list.url},#{list.type},#{list.address},#{list.region},#{list.businessCircle},#{list.years},#{list.unitPrice},#{list.propertyType},#{list.layerNumber},#{list.propertyFee}
+            ,#{list.builtUpArea},#{list.households},#{list.completionTime},#{list.elevatorNum},#{list.parkingSpace},#{list.propertyCompany},#{list.loopLine},#{list.division},#{list.airConditioner},#{list.decorationStatus},#{list.areaCovered},#{list.bayArea},#{list.developers},#{list.bus}
+            ,#{list.metro},#{list.position})
+        </foreach>
+    </insert>
+    <insert id="addGould">
+        insert  into
+        tbl_gould
+         values
+        <foreach collection="list" item="list"  index="index" separator=",">
+            (
+            #{list.id},#{list.name},#{list.address},#{list.province},#{list.city},#{list.area}
+            ,#{list.classification},#{list.telephone},'','',#{list.wgs84lat},#{list.wgs84lon}
+            ,#{list.gouldLat},#{list.gouldLon},#{list.baiduLat},#{list.baiduLon}
+            )
+        </foreach>
+    </insert>
+    <insert id="addChainFamilyTwoRoom">
+        insert  into
+        tbl_chainfamily_tworoom
+        values
+        <foreach collection="list" item="list"  index="index" separator=",">
+            (#{list.houseType},#{list.price}
+            ,#{list.builtUpArea},#{list.area},#{list.lowerShelf},#{list.livingRoomsNum},#{list.orientation},#{list.communityName},#{list.floor}
+            ,#{list.title},#{list.unitPrice},#{list.goodsHouse},#{list.housingLink},#{list.cellId},#{list.priceNum},#{list.housiongNum}
+            ,#{list.bedroomsNum},#{list.city_code},#{list.ownership},#{list.listing},#{list.purpose},#{list.elevator},#{list.years}
+            ,#{list.buildingType},#{list.renovation},#{list.lon},#{list.region},#{list.lat},#{list.locationDescription},#{list.daysLook7}
+            ,#{list.daysLook30},#{list.followHours},#{list.masterGraph},#{list.thumbnail})
+        </foreach>
+    </insert>
+    <insert id="addChainFamily">
+        insert into
+        tbl_chainfamily
+            values
+        <foreach collection="list" item="list"  index="index" separator=",">
+            (#{list.link},#{list.name}
+            ,#{list.id},#{list.partition},#{list.region},#{list.geology},#{list.ageCompletion},#{list.propertyRight},#{list.architecturalType},#{list.developers}
+            ,#{list.propertyRights},#{list.water},#{list.electric},#{list.fixedCarsNum},#{list.parkingCost},#{list.gasCost},#{list.greed},#{list.plotRatio},#{list.propertyCompany}
+            ,#{list.propertyPrice},#{list.propertyTelephone},#{list.lat},#{list.lon},#{city})
+        </foreach>
+    </insert>
+    <insert id="addChainFamilyNewHouseUpload">
+         insert into
+        tbl_chainfamily_newhouse
+            values
+        <foreach collection="list" item="list"  index="index" separator=",">
+            (#{list.id},#{list.city_name},#{list.thumbnail},#{list.minimum_area},#{list.maximum_area},#{list.region},#{list.street},#{list.renovation}
+            ,#{list.apartment_situation},#{list.name},#{list.address},#{list.average_price},#{list.project_abbreviation},#{list.label},#{list.type},#{list.sales_status}
+            ,#{list.opening_time},#{list.lowest_total_price},#{list.project_description},#{list.lat},#{list.lon}
+          )
+        </foreach>
+    </insert>
+    <insert id="addChainFamilyTurnoverUpload">
+            insert into
+        tbl_chainfamily_turnover
+            values
+        <foreach collection="list" item="list"  index="index" separator=",">
+            (#{list.unit_price},#{list.transaction_price},#{list.area},#{list.living_rooms_num},#{list.orientation},#{list.community_name},#{list.floor}
+            ,#{list.title},#{list.housing_link},#{list.cell_id},#{list.price},#{list.housing_num},#{list.bedrooms_num},#{list.city_num},#{list.ownership},#{list.purpose},#{list.elevator}
+            ,#{list.years},#{list.closing_date},#{list.building_type},#{list.renovation},#{list.lon},#{list.region},#{list.lat},#{list.location_description},#{list.browse_num},#{list.price_adjustment_times}
+            ,#{list.listed_price},#{list.transaction_period_days},#{list.visits_num},#{list.frequency_num},#{list.apartment_pattern}
+            )
+        </foreach>
+    </insert>
+    <insert id="addMeiTuanWMUpload">
+        insert into
+        tbl_meituanwm
+        values
+        <foreach collection="list" item="list"  index="index" separator=",">
+            (#{list.country},#{list.monthSaleCount},#{list.city},#{list.avg_price},#{list.rating},#{list.telephones},#{list.description}
+            ,#{list.like_count},#{list.app_code},#{list.log_rating},#{list.title},#{list.geo_point},#{list.min_deliver},#{list.qual_rating},#{list.state}
+            ,#{list.id},#{list.deliver_fee},#{list.deliver_time},#{list.address},#{list.tipInfo},#{list.cat_name2},#{list.cat_name1}
+            ,#{list.cat_path_key},#{list.key_values},#{list.url},#{list.comment_count},#{list.tags},#{list.promotions},#{list.is_chain_store},#{list.district}
+            ,#{list.images_urls},#{list.ratingdist},#{list.location},#{list.opening_hours},#{list.catId1},#{list.catId2},#{list.bulletin}
+            )
+        </foreach>
+    </insert>
+    <insert id="addCityExcelUpload">
+        insert into
+        tbl_city_data
+        values
+        <foreach collection="list" item="list"  index="index" separator=",">
+            (replace(uuid(),'-',''),
+                #{list.province},#{list.city},#{list.residentPopulationPro}
+            ,#{list.GDP},#{list.threeProduction},#{list.retailTotal},#{list.income},#{list.expenditure},#{list.cityLevel}
+            )
+        </foreach>
+    </insert>
+    <insert id="uploadCityThermodynamic">
+        insert into
+        tbl_thermodynamic_data
+        values
+        <foreach collection="list" item="list"  index="index" separator=",">
+            (
+            #{list.id},#{list.shopName},#{list.price}
+            ,#{list.starClass}
+            ,#{list.score}
+            ,#{list.telephone}
+            ,#{list.commentNumber}
+            ,#{list.firstClassClassification}
+            ,#{list.twoLevelClassification}
+            ,#{list.threeLevelClassification}
+            ,#{list.groupBuying}
+            ,#{list.districtAndCounty}
+            ,#{list.recommendedDishes}
+            ,#{list.time}
+            ,#{list.region}
+            ,#{list.address}
+            ,#{list.route}
+            ,#{list.wgs_lng}
+            ,#{list.wgs_lat}
+            ,#{cityName}
+            )
+        </foreach>
+    </insert>
+    <insert id="industryUpload">
+        insert into tbl_industry
+        (industry_id,industry_name,industry_parent_id)
+        value
+        <foreach collection="list" item="list"  index="index" separator=",">
+            ( replace(uuid(),'-',''),#{list.FirstClassification},'0')
+        </foreach>
+    </insert>
+    <insert id="twoIndustryUpload">
+        insert into tbl_industry
+        (industry_id,industry_name,industry_parent_id)
+        value
+        <foreach collection="list" item="list"  index="index" separator=",">
+            (replace(uuid(),'-',''),#{list.twoClassification},(select a.industry_id from (select industry_id from tbl_industry where industry_name = #{list.FirstClassification}) a limit 1) )
+        </foreach>
+    </insert>
+    <insert id="twoIndustryUpload1">
+        insert into tbl_industry_dian
+        values
+        <foreach collection="list" item="list"  index="index" separator=",">
+            ( replace(uuid(),'-',''),#{list.dianXianQuanFirstClass},#{list.dianXianQuanTwoClass},#{list.FirstClassification},#{list.TwoClassification})
+        </foreach>
+    </insert>
+    <select id="isCount" resultType="java.lang.Integer">
+        select count(1) from tbl_thermodynamic_data where city = #{cityName}
+    </select>
+    <delete id="deleteThermodynamic">
+        delete from tbl_thermodynamic_data where city = #{cityName}
+    </delete>
+    <select id="isChainCount" resultType="java.lang.Integer">
+        select count(1) from tbl_chainfamily where city = #{city,jdbcType=VARCHAR}
+    </select>
+    <delete id="deleteChainData">
+        delete from tbl_chainfamily where  city = #{city,jdbcType=VARCHAR}
+    </delete>
+    <select id="isGouldCount" resultType="java.lang.Integer">
+        select count(1) from tbl_gould where city = #{city,jdbcType=VARCHAR}
+    </select>
+    <delete id="deleteGouldData">
+        delete from tbl_gould where city = #{city,jdbcType=VARCHAR}
+    </delete>
+    <select id="isAreyouHungrry" resultType="java.lang.Integer">
+            select count(1) from tbl_areyouhungry where city = #{city,jdbcType=VARCHAR}
+    </select>
+    <delete id="deleteAreyouHungry">
+         delete from tbl_areyouhungry where city = #{city,jdbcType=VARCHAR}
+    </delete>
+    <insert id="uploadThermodynamicByUser">
+        insert into tbl_thermodynamic_add_user
+        values
+        <foreach collection="list" item="list"  index="index" separator=",">
+            ( replace(uuid(),'-',''),#{list.baiduLat},#{list.baiduLon},#{type} ,#{list.count},#{userId} )
+        </foreach>
+    </insert>
+</mapper>

@@ -1,0 +1,77 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.pointcoil.mapper.AdminOfficialMapper">
+    <insert id="addCarousel">
+        insert tbl_admin_officialwebsite
+        <set>
+            <trim suffixOverrides=",">
+                    id = replace(uuid(),'-',''),
+                <if test="officialWebsite.pictureImg != null and officialWebsite.pictureImg != ''">
+                    picture_img = #{officialWebsite.pictureImg},
+                </if>
+                    picture_type =#{officialWebsite.pictureType},
+                <if test="officialWebsite.pictureConnect != null and officialWebsite.pictureConnect != ''">
+                    picture_connect = #{officialWebsite.pictureConnect},
+                </if>
+                <if test="officialWebsite.pictureWords !=null and officialWebsite.pictureWords != ''">
+                    picture_words =#{officialWebsite.pictureWords},
+                </if>
+                <if test="officialWebsite.pictureText != null and officialWebsite.pictureText != ''">
+                    picture_text = #{officialWebsite.pictureText},
+                </if>
+            </trim>
+        </set>
+    </insert>
+
+    <delete id="deleteCarousel">
+        delete from tbl_admin_officialwebsite
+        where id =#{adminPageCommon.id}
+    </delete>
+
+    <select id="adminLogin" resultType="com.pointcoil.dto.admin.AdminCommon">
+      select user_name,pass_word ,user_role from tbl_user_admin where user_name=#{adminCommon.userName,jdbcType=VARCHAR}  and pass_word =#{adminCommon.passWord,jdbcType=VARCHAR}
+    </select>
+
+    <select id="findOfficialData" resultType="com.pointcoil.dto.admin.AdminPageCommon$OfficialWebsite">
+        select id, picture_img ,picture_words,picture_connect,create_time,picture_text from tbl_admin_officialwebsite where picture_type =#{singleNum,javaType=string} order by create_time desc
+    </select>
+
+    <select id="findAllCarousel" resultType="com.pointcoil.dto.admin.AdminPageCommon$OfficialWebsite">
+        select id,picture_img,create_time from tbl_admin_officialwebsite where picture_type =#{single,javaType=string} order by create_time desc
+    </select>
+    <select id="showCarousel" resultType="com.pointcoil.dto.admin.AdminPageCommon$OfficialWebsite">
+        select id,picture_img , picture_words ,picture_connect ,picture_text from tbl_admin_officialwebsite where id = #{adminPageCommon.id}
+    </select>
+
+    <update id="updCarousel">
+        update tbl_admin_officialwebsite
+        <set>
+            <trim suffixOverrides=",">
+                <if test="officialWebsite.pictureImg != null and officialWebsite.pictureImg != ''">
+                    picture_img = #{officialWebsite.pictureImg},
+                </if>
+                <if test="officialWebsite.pictureConnect != null and officialWebsite.pictureConnect != ''">
+                    picture_connect = #{officialWebsite.pictureConnect},
+                </if>
+                <if test="officialWebsite.pictureWords !=null and officialWebsite.pictureWords != ''">
+                    picture_words =#{officialWebsite.pictureWords},
+                </if>
+                <if test="officialWebsite.pictureText != null and officialWebsite.pictureText != ''">
+                    picture_text =#{officialWebsite.pictureText} ,
+                </if>
+
+            </trim>
+        </set>
+        where id =#{officialWebsite.id}
+    </update>
+    <select id="selectOldPas" resultType="java.lang.Integer">
+         select count(1) from tbl_user_admin where pass_word = #{md5}
+    </select>
+    <update id="changePassword">
+        update tbl_user_admin
+        <set>
+            pass_word = #{md5}
+        </set>
+    </update>
+
+</mapper>

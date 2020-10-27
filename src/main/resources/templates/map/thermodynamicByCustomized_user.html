@@ -1,0 +1,135 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8">
+    <title>城市数据</title>
+    <meta name="renderer" content="webkit">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1">
+    <meta name="viewport"
+          content="width=device-width, initial-scale=1.0, minimum-scale=1.0, maximum-scale=1.0, user-scalable=0">
+    <link rel="stylesheet" href="../../static/layuiadmin/layui/css/layui.css" media="all">
+    <link rel="stylesheet" href="../../static/layuiadmin/style/admin.css" media="all">
+</head>
+<script type="text/html" id="imgTpl">
+    <div>
+        {{# layui.each(d.businessLicense.split(","), function(index, item){ }}
+        <img src="{{ item }}" style="height:80px">
+        {{# }); }}
+    </div>
+</script>
+<body>
+<form>
+    <p><input id="userId" name="userId" type="hidden">
+    <p><input id="type" name="type" type="hidden">
+</form>
+<div class="layui-fluid">
+    <div class="layui-row layui-col-space15">
+        <div class="layui-col-md12">
+            <div class="layui-card">
+                <div class="layui-card-header">定制数据
+                    <button type="button" class="layui-btn" id="test3"><i class="layui-icon"></i>上传文件</button><br/>
+                    <button type="button" class="layui-btn" id="test4"><i class="layui-icon"></i>删除当前数据</button>
+
+                </div>
+                <div class="layui-card-body">
+                    <table class="layui-hide" id="test-table-autowidth" lay-filter="test-table-autowidth"></table>
+                    <div id="test-lpage"></div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script src="../../static/layuiadmin/layui/layui.js"></script>
+
+<script>
+    layui.config({
+        //静态资源所在路径
+        base: '../../static/layuiadmin/'
+    }).extend({
+        //主入口模块
+        index: 'lib/index'
+    }).use(['index', 'table', 'laypage', 'form', 'layer', 'laydate','upload'], function () {
+
+        showElement(1,10);
+        var data1;
+        var $ = layui.jquery
+            ,upload = layui.upload;
+
+    });
+
+    function showElement(page,pageSize) {
+        var table = layui.table,
+            laydate = layui.laydate,
+            laypage = layui.laypage;
+        var userId = layui.$("#userId").val();
+        var type = layui.$("#type").val();
+        table.render({
+            elem: '#test-table-autowidth',
+            url: layui.data(layui.setter.tableName)['admin_host'] + '/system/findCustomizedThermodynamic?page=' + page + '&pageSize=' + pageSize+'&userId='+userId+'&type='+type,
+            cellMinWidth: 80,
+            method: "POST",
+            page: false,
+            cols: [
+                [
+                    {field: 'count', title: '数量', align: 'center'},
+                    {field: 'name', title: '名称', align: 'center'},
+                    {field: 'baiduLon', title: '纬度',edit: 'text', align: 'center'},
+                    {field: 'baiduLat', title: '经度',edit: 'text', align: 'center'}
+                ]
+            ],
+            done: function (res, curr, count) {
+                data1 = res['count'];
+                laypage.render({
+                    elem: 'test-lpage',
+                    count: res['count'],
+                    curr: page,
+                    limit: pageSize,
+                    layout: ['prev', 'page', 'next', 'skip', 'count', 'limit'],
+                    jump: function (obj, first) {
+                        if (first) {
+                            return;
+                        }
+                        showElement(obj.curr, obj.limit);
+                    }
+                });
+            }
+        });
+
+        //指定允许上传的文件类型
+        layui.upload.render({
+            elem: '#test3'
+            ,url: layui.data(layui.setter.tableName)['admin_host'] + '/system/uploadThermodynamicByUser'
+            ,data: {'userId':userId,'type':type}
+            ,accept: 'file' //普通文件
+            ,done: function(res){
+                layui.layer.msg("添加成功", {icon: 6});
+                showElement(1, 10);
+            }
+        });
+
+
+        layui.$('#test4').on('click', function () {
+            layer.confirm('真的删除吗', function (index) {
+                layui.$.ajax({
+                    type: 'POST',
+                    url: layui.data(layui.setter.tableName)['admin_host'] + '/system/deleteCustomizedThermodynamic?userId=' + userId+'&type='+type,
+                    headers: {
+                        'Content-Type': 'application/x-www-form-urlencoded'
+                    },
+                    data: null,
+                    success: function (resp) {
+                        layui.layer.msg("删除成功", {icon: 6});
+                        showElement(1, 10);
+                    }
+                });
+                layui.layer.close(index);
+            })
+
+        });
+
+    }
+
+</script>
+</body>
+</html>

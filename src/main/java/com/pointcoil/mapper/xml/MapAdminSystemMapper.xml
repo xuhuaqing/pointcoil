@@ -1,0 +1,268 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.pointcoil.mapper.MapAdminSystemMapper">
+
+
+    <select id="findIndustryOne" resultType="com.pointcoil.dto.map.MapIndustryDTO">
+        select industry_id,industry_name from tbl_industry where industry_parent_id = '0'
+    </select>
+    <select id="findIndustryTwo" resultType="com.pointcoil.dto.map.MapIndustryDTO$IndustryLevelTwo">
+                select industry_id as industryLevelTwoId,industry_name as industryLevelTwoName from tbl_industry where industry_parent_id = #{industryId}
+    </select>
+    <insert id="addIndustry">
+        insert tbl_industry
+        <set>
+            industry_id = replace(uuid(),'-',''),
+            industry_name = #{industryName},
+            industry_parent_id = #{parentId}
+        </set>
+    </insert>
+    <delete id="deleteIndustry">
+        delete from tbl_industry where industry_id = #{industryName}
+    </delete>
+    <update id="updIndustry">
+        update tbl_industry
+        <set>
+            industry_name = #{industryName}
+        </set>
+        where
+        industry_id = #{industryId}
+    </update>
+    <select id="findLabelImg" resultType="com.pointcoil.dto.map.LabelStyleDTO">
+        select label_style_id,label_style_img from tbl_label_style
+        order by create_time desc
+    </select>
+    <insert id="labelAdd">
+        insert tbl_label_style
+        <set>
+            label_style_id = replace(uuid(),'-',''),
+            label_style_img = #{carouselImageUrl}
+        </set>
+    </insert>
+    <delete id="deleteLabel">
+        delete from tbl_label_style
+        where label_style_id =#{labelStyleId}
+    </delete>
+    <select id="findLabelById" resultType="com.pointcoil.dto.map.LabelStyleDTO">
+          select label_style_id,label_style_img from tbl_label_style where label_style_id = #{labelStyleId}
+    </select>
+    <update id="updLabel">
+        update tbl_label_style
+        <set>
+            label_style_img = #{carouselImageUrl}
+        </set>
+        where label_style_id = #{labelStyleId}
+    </update>
+    <update id="changePassword">
+        update tbl_user_admin_map
+        <set>
+            password = #{password}
+        </set>
+    </update>
+    <select id="selectOldPas" resultType="java.lang.Integer">
+        select count(1) from tbl_user_admin_map where password = #{md5}
+    </select>
+    <update id="clear">
+        update tbl_core
+        <set>
+            count = count +1
+        </set>
+        where id = 1
+    </update>
+    <select id="findMember" resultType="com.pointcoil.dto.map.MemberDTO">
+        select member_id,member_level,business_num,brand_num,label_num,sub_account_num,two_element,one_element,customized_server from tbl_member
+        order by member_level
+    </select>
+    <update id="updateMember">
+        update tbl_member
+        <set>
+            <if test="key == 'memberLevel'.toString()">
+                member_level=#{value}
+            </if>
+            <if test="key == 'businessNum'.toString()">
+                business_num=#{value}
+            </if>
+            <if test="key == 'brandNum'.toString()">
+                brand_num=#{value}
+            </if>
+            <if test="key == 'labelNum'.toString()">
+                label_num=#{value}
+            </if>
+            <if test="key == 'subAccountNum'.toString()">
+                sub_account_num=#{value}
+            </if>
+            <if test="key == 'twoElement'.toString()">
+                two_element=#{value}
+            </if>
+            <if test="key == 'oneElement'.toString()">
+                one_element=#{value}
+            </if>
+            <if test="key == 'customizedServer'.toString()">
+                customized_server=#{value}
+            </if>
+        </set>
+        where
+        member_id = #{memberId}
+    </update>
+    <select id="findThermodynamic" resultType="com.pointcoil.entity.ProvincesEntity">
+        select id,cityName,mergerName,pinyin from tbl_provinces where depth = 2
+        <if test="city != null and city != ''">
+            and mergerName like concat('%',#{city,jdbcType=VARCHAR},'%')
+        </if>
+    </select>
+    <select id="findCityName" resultType="com.pointcoil.dto.map.ThermodynamicDTO$ThermodynamicDTO1">
+        select id,shopName,firstClassClassification,twoLevelClassification,districtAndCounty,wgs_lng as wgsLng,wgs_lat as wgsLat from tbl_thermodynamic_data
+        where city = #{cityName}
+    </select>
+    <select id="findAreCityName" resultType="com.pointcoil.dto.map.AreYouHungryDTO">
+        select id,title,address,monthSaleCount,lon,lat,city from tbl_areyouhungry
+        where city = #{cityName}
+    </select>
+    <select id="findChainCityName" resultType="com.pointcoil.dto.map.ChainFamilyDTO">
+            select id,name,region,geology,lat,lon from tbl_chainfamily where city = #{cityName}
+    </select>
+    <select id="findRule" resultType="com.pointcoil.entity.RuleEntity">
+        select  id,firstClassClassification,twoLevelClassification,threeLevelClassification,minCount  from tbl_thermodynamic_rule where thermodynamic_id = (select heat_map_id from tbl_heat_map where type =#{type}) and city =#{cityName}
+    </select>
+    <insert id="ruleAdd">
+        insert into tbl_thermodynamic_rule
+        values
+        (replace(uuid(),'-',''),(select heat_map_id from tbl_heat_map where type = #{ruleEntity.type}),#{ruleEntity.firstClassClassification}
+        ,#{ruleEntity.twoLevelClassification},#{ruleEntity.threeLevelClassification},#{ruleEntity.minCount},#{ruleEntity.cityName})
+    </insert>
+    <select id="exportExcel" resultType="com.pointcoil.entity.BusClick$ExportExcel">
+        select '0' as businessUnsold,'0' as businessOpen,'0' as businessLevel,'定制商圈' as businessName,'定制商圈' as businessDescribe, business_type as businessType,radius,lng_and_lat as coordinates,screenshot_img as screenshotImg,thermodynamic_chart as thermodynamicChart,city,business_area as businessArea,district,province,'' as customizedId  from tbl_business where business_id in
+        <foreach collection="businessId" item="businessId" close=")" open="(" index="index" separator=",">
+            #{businessId}
+        </foreach>
+    </select>
+    <select id="findGouldCityData" resultType="com.pointcoil.dto.map.GouldDTO">
+        select id,name,classification,address,baidu_lat,baidu_lon from tbl_gould where city = #{cityName}
+    </select>
+    <select id="exportExcelByUser" resultType="com.pointcoil.entity.BusClick$ExportExcelByUser">
+        select user_name as userName,user_phone AS userPhone,user_email AS userEmail,enterprise_name AS enterpriseName,make_name AS makeName,businessLicense,create_time AS createTime
+        from tbl_user
+        where id in
+        <foreach collection="id" item="id" index="index" separator="," open="(" close=")">
+            #{id}
+        </foreach>
+
+    </select>
+    <select id="order" resultType="com.pointcoil.dto.map.OrderDTO">
+        select DISTINCT trade_no,user_name,user_phone,enterprise_name,make_name,tbl_pay.time as `year`,tbl_pay.create_time,total_money FROM
+        tbl_user,tbl_pay
+        where tbl_user.id = tbl_pay.user_id
+        and is_pay = 1
+        <if test="createTime != null and createTime != ''">
+            and date(tbl_pay.create_time) = #{createTime,jdbcType=VARCHAR}
+        </if>
+        order by tbl_pay.create_time desc
+    </select>
+    <update id="updateCustom">
+        update tbl_user
+        <set>
+            appid = #{appId,jdbcType=VARCHAR},
+            secret = #{secret,jdbcType=VARCHAR}
+        </set>
+        where id = #{id}
+    </update>
+    <select id="findCustomId" resultType="java.util.Map">
+        select appid,secret from tbl_user where  id = #{id}
+    </select>
+    <update id="updateRule">
+        update tbl_thermodynamic_rule
+        <set>
+            firstClassClassification = #{firstClassClassification},
+            twoLevelClassification = #{twoLevelClassification},
+            threeLevelClassification = #{threeLevelClassification1},
+            minCount = #{minCount}
+        </set>
+        where id = #{id}
+    </update>
+    <select id="findThermodynamicByUserId" resultType="java.util.Map">
+	        select id , city_name as cityName , DATE_FORMAT(`start_time`,'%Y-%m-%d')  as startTime,  DATE_FORMAT(`end_time`,'%Y-%m-%d') as endTime from tbl_customized_thermodynamic
+        where user_id = #{id}
+    </select>
+    <select id="getSearchCity" resultType="java.util.Map">
+         select cityName from tbl_provinces
+         where cityName like concat('%',#{cityName},'%')
+         and depth = 2
+    </select>
+    <insert id="thermodynamicUserAdd">
+        insert tbl_customized_thermodynamic
+        values
+        <foreach collection="linkUrl" item="linkUrl"  index="index" separator=",">
+          (replace(UUID(),'-',''),#{id},#{linkUrl,jdbcType=VARCHAR},#{startTime},#{endTime})
+        </foreach>
+    </insert>
+    <delete id="deleteCity">
+        delete from tbl_customized_thermodynamic
+        where  id = #{id}
+    </delete>
+    <select id="isThermodynamicByUserId" resultType="java.lang.String">
+        select city_name from tbl_customized_thermodynamic
+        where user_id = #{heatDTO.userId} and (city_name like concat('%',#{heatDTO.city},'%') or city_name = #{city1} )
+        and DATE_FORMAT(now(),'%Y-%m-%d') between start_time and end_time
+    </select>
+    <select id="isCity" resultType="java.lang.Integer">
+        select count(1) from tbl_customized_thermodynamic
+        where user_id = #{id} and city_name = #{linkUrl,jdbcType=VARCHAR}
+    </select>
+    <select id="findMemberById" resultType="java.lang.Integer">
+        select is_members from tbl_user
+        where id = #{id}
+    </select>
+    <select id="findCityNameById" resultType="java.lang.String">
+        select cityName from  tbl_provinces
+        where id in
+        <foreach collection="cityName" item="cityName" close=")" open="(" index="index" separator=",">
+            #{cityName}
+        </foreach>
+    </select>
+    <select id="findCityNameAll" resultType="java.lang.String">
+         select cityName from tbl_provinces
+         where
+          depth = 2
+    </select>
+    <update id="updateMemberCityTime">
+        update tbl_customized_thermodynamic
+        <set>
+            start_time = #{startTime},
+            end_time = #{endTime}
+        </set>
+        where id = #{id} and user_id = #{userId,jdbcType=VARCHAR}
+    </update>
+    <delete id="deleteCityData">
+        delete from tbl_thermodynamic_data
+        where city = #{cityName}
+    </delete>
+    <delete id="deleteUser">
+        delete from tbl_user
+        where id = #{id} and user_phone = #{userPhone}
+    </delete>
+    <select id="findProvinces" resultType="java.lang.String">
+        select province from tbl_city_data
+        where city like concat(#{city},'%')
+    </select>
+    <select id="selectProvinces" resultType="java.lang.String">
+        SELECT cityName FROM `tbl_provinces` where  locate(shortName,#{city}) >0  and locate(#{provinces},mergerName)>0 limit 1
+    </select>
+    <select id="exportExcelByLabel" resultType="com.pointcoil.dto.map.LabelDTO$SelectLabelById">
+        select label_name as labelName,label_style_id as labelStyleId,lat_and_lng as latAndLng
+        from tbl_label
+        where label_id in
+        <foreach collection="labelId" item="id" index="index" separator="," open="(" close=")">
+            #{id}
+        </foreach>
+    </select>
+    <select id="findCustomizedThermodynamic" resultType="com.pointcoil.dto.map.GouldDTO">
+        select lat as baiduLat,lng as baiduLon,`count`, `name` from tbl_thermodynamic_add_user
+        where user_id = #{userId} and type = #{type}
+    </select>
+
+
+    <delete id="deleteCustomizedThermodynamic">
+        delete from tbl_thermodynamic_add_user
+        where user_id = #{userId} and type = #{type}
+    </delete>
+</mapper>

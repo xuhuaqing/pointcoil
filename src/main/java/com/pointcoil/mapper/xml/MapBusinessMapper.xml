@@ -1,0 +1,160 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="com.pointcoil.mapper.MapBusinessMapper">
+    <insert id="addBrand">
+        insert tbl_brand
+        <set>
+            <trim suffixOverrides=",">
+                brand_id = replace(uuid(),'-',''),
+                <if test="brandDTO.brandTitle !=''">
+                brand_title = #{brandDTO.brandTitle},
+                </if>
+                <if test="brandDTO.brandIndustryOne !=''">
+                    brand_industry_one = #{brandDTO.brandIndustryOne},
+                </if>
+                <if test="brandDTO.brandIndustryTwo !=''">
+                    brand_industry_two = #{brandDTO.brandIndustryTwo},
+                </if>
+                <if test="brandDTO.brandImg !=''">
+                    brand_img = #{brandDTO.brandImg},
+                </if>
+                <if test="brandDTO.userId !=''">
+                    user_id = #{brandDTO.userId},
+                </if>
+            </trim>
+        </set>
+    </insert>
+    <update id="updateBrand">
+        update tbl_brand
+        <set>
+            <trim suffixOverrides=",">
+                <if test="brandDTO.brandTitle !='' and brandDTO.brandTitle !=null">
+                    brand_title = #{brandDTO.brandTitle},
+                </if>
+                <if test="brandDTO.brandIndustryOne !='' and brandDTO.brandIndustryOne !=null">
+                    brand_industry_one = #{brandDTO.brandIndustryOne},
+                </if>
+                <if test="brandDTO.brandIndustryTwo !='' and brandDTO.brandIndustryTwo !=null">
+                    brand_industry_two = #{brandDTO.brandIndustryTwo},
+                </if>
+                <if test="brandDTO.brandImg !='' and brandDTO.brandImg !=null">
+                    brand_img = #{brandDTO.brandImg},
+                </if>
+            </trim>
+        </set>
+        where brand_id =#{brandDTO.brandId}
+    </update>
+    <update id="deleteBrand">
+        update tbl_brand
+        <set>
+            is_delete = 1
+        </set>
+        where brand_id = #{brandDTO.brandId}
+    </update>
+
+    <select id="industryInit" resultMap="industry">
+        select industry_id,industry_name from tbl_industry where industry_parent_id = '0'
+    </select>
+    <resultMap id="industry" type="com.pointcoil.dto.map.MapIndustryDTO">
+        <id column="industry_id" property="industryId"/>
+        <result column="industry_name" property="industryName"/>
+        <collection property="industryLevelTwo" ofType="list" column="{industryId=industry_id}"
+                    select="selectLevelTwoIndustry"/>
+    </resultMap>
+    <select id="selectLevelTwoIndustry" resultType="com.pointcoil.dto.map.MapIndustryDTO$IndustryLevelTwo">
+        select industry_id as industryLevelTwoId, industry_name  as industryLevelTwoName from tbl_industry where  industry_parent_id =#{industryId}
+    </select>
+    <select id="selectBrand" resultMap="selectBrand">
+         select brand_id, brand_title,brand_industry_one , brand_industry_two ,brand_img from tbl_brand  where brand_id = #{brandDTO.brandId}
+    </select>
+    <resultMap id="selectBrand" type="com.pointcoil.dto.map.BrandDTO$SelectBrandDTO">
+        <id column="brand_id" property="brandId"/>
+        <result column="brand_title" property="brandTitle"/>
+        <result column="brand_industry_one" property="brandIndustryOne"/>
+        <result column="brand_industry_two" property="brandIndustryTwo"/>
+        <result column="brand_img" property="brandImg"/>
+        <collection property="industryLevelTwoName" ofType="String" column="{industryId=brand_industry_two}"
+                    select="selectIndustryName"/>
+        <collection property="industryLevelOneName" ofType="String" column="{industryId=brand_industry_one}"
+                    select="selectIndustryName"/>
+    </resultMap>
+
+    <select id="selectIndustryName" resultType="String">
+        select industry_name from tbl_industry where industry_id=#{industryId}
+    </select>
+    <select id="businessInit" resultType="com.pointcoil.dto.map.BrandDTO$BrandInit">
+        select brand_id as brandId,brand_title as title,brand_img as brandImg from tbl_brand where user_id =#{mapCommonDTO.userId} and is_delete = 0
+    </select>
+    <select id="selectCreateBrand" resultType="int">
+        select count(1) from tbl_brand where user_id =#{userId,jdbcType=VARCHAR} and is_delete  = 0
+    </select>
+    <select id="selectCanCreateBrand" resultType="com.pointcoil.dto.map.MemberDTO">
+        select member_id,member_level,business_num,brand_num,label_num,sub_account_num,two_element,one_element,customized_server from tbl_member
+        <where>
+            <if test="memberLevel != null and memberLevel !=''">
+                member_level=#{memberLevel}
+            </if>
+        </where>
+    </select>
+    <select id="selectCityData" resultType="com.pointcoil.dto.map.CityExcelDTO">
+        select resident_population_pro ,GDP,three_production,retail_total,income,expenditure,city_level from tbl_city_data where city like concat(#{city,jdbcType=VARCHAR},'%')
+    </select>
+    <insert id="createPresentation">
+        insert into tbl_report
+        (report_id,businessZoneName,followNum,qrCodeImg,screenshotImg,city,province,cityData,area,residentPopulation,villageNum
+        ,officeNum,villageName,officeName,gatherGuestsNum,gatherGuestsName,gatherGuests,oneIndustryCount,twoLevelIndustry,twoIndustryCount,businessLevel,thermodynamicChart
+        ) values
+        (#{replace1},#{jsonObject.businessZoneName},#{jsonObject.followNum},#{jsonObject.QRCode},#{jsonObject.screenshotImg},#{jsonObject.city},#{jsonObject.province},#{jsonObject.cityData},
+        #{jsonObject.area},#{jsonObject.totalPopulation},#{jsonObject.residentialQuartersNum},#{jsonObject.officeBuildingNum},#{jsonObject.residentialQuartersName},#{jsonObject.officeBuilding},
+        #{jsonObject.otherNum},#{jsonObject.otherName},#{jsonObject.oneIndustry},#{jsonObject.oneIndustryCount},#{jsonObject.twoIndustry},#{jsonObject.twoIndustryCount},
+        #{jsonObject.businessLevel},#{jsonObject.thermodynamicChart})
+    </insert>
+    <select id="screenIndustry" resultType="java.lang.String">
+      select industry_name_dian_one  from tbl_industry_dian
+        where  INSTR(#{oneIndustry},industry_name_one) > 0 and industry_name_dian_one is not null
+				limit 1
+    </select>
+    <select id="selectBrandByIndustry" resultType="java.lang.String">
+				select industry_name from tbl_industry
+				where industry_id = (select brand_industry_one from tbl_brand where brand_id = #{brandId})
+    </select>
+    <select id="searchTwoIndustry" resultType="java.lang.String">
+				select if(industry_name_dian_two is not null ,industry_name_dian_two,industry_name_two) as t
+				from tbl_industry_dian
+				where industry_name_dian_one = #{i} and  INSTR(#{pointInPolygon},industry_name_two) > 0
+                limit 1
+    </select>
+    <select id="selectCustomized" resultMap="businessZoneInit">
+            select id, lonAndLat , radius,type from tbl_customized where brand_id = #{brandId}
+    </select>
+    <resultMap id="businessZoneInit" type="com.pointcoil.dto.map.BusinessZoneDTO$SBusinessZoneDTO">
+        <id column="id" property="customizedId"/>
+        <result column="lonAndLat" property="lngAndLat"/>
+        <result column="radius" property="radius"/>
+        <result column="type" property="businessType"/>
+    </resultMap>
+    <select id="isParent" resultType="java.lang.Integer">
+        select count(1) from tbl_user where parent_id = 0 and user_phone = #{accountPhone}
+    </select>
+    <delete id="deleteBusiness">
+        delete from tbl_business where brand_id = #{brandDTO.brandId}
+    </delete>
+    <delete id="deleteReportUser">
+        delete from tbl_business_user where reportId in (select report_id from tbl_business where brand_id = #{brandDTO.brandId})
+    </delete>
+    <delete id="deleteReport">
+        delete from tbl_report where report_id in (select report_id from tbl_business where brand_id = #{brandDTO.brandId})
+    </delete>
+    <insert id="insertQRcodeParam">
+        insert tbl_qrCode
+        values
+        (#{codeId},#{replace1},#{sonId},#{userId,jdbcType=VARCHAR})
+    </insert>
+    <select id="selectAppId" resultType="java.util.Map">
+        select appid,secret from tbl_user
+        where id = #{userId,jdbcType=VARCHAR}
+    </select>
+    <select id="selectPrice" resultType="java.math.BigDecimal">
+        select price from  tbl_city_price
+    </select>
+</mapper>

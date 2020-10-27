@@ -1,0 +1,117 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.pointcoil.mapper.MapAdminUserMapper">
+
+
+    <select id="adminLogin" resultType="com.pointcoil.dto.admin.AdminCommon">
+        select user_name,password from tbl_user_admin_map where user_name = #{adminCommon.userName,jdbcType=VARCHAR}
+        and password = #{adminCommon.passWord,jdbcType=VARCHAR}
+    </select>
+    <select id="findUser" resultType="com.pointcoil.entity.MapUserEntity">
+        select id , user_name as userName,user_phone as userPhone,user_email as userEmail,enterprise_name as enterpriseName,make_name as makeName,businessLicense,is_members as isMembers,star_time as starTime,end_time as endTime from tbl_user
+        <where>
+            to_examine = '1' and parent_id = '0'
+            <if test="adminPageCommon.userPhone != '' and adminPageCommon.userPhone!=null">
+                and user_phone like concat('%',#{adminPageCommon.userPhone},'%')
+            </if>
+        </where>
+        order by create_time
+    </select>
+    <select id="findBrandList" resultMap="selectBrand">
+         select brand_id, brand_title,brand_industry_one , brand_industry_two ,brand_img from tbl_brand  where user_id = #{userId} and is_delete = '0'
+    </select>
+
+    <resultMap id="selectBrand" type="com.pointcoil.dto.map.BrandDTO$SelectBrandDTO">
+        <id column="brand_id" property="brandId"/>
+        <result column="brand_title" property="brandTitle"/>
+        <result column="brand_industry_one" property="brandIndustryOne"/>
+        <result column="brand_industry_two" property="brandIndustryTwo"/>
+        <result column="brand_img" property="brandImg"/>
+        <collection property="industryLevelTwoName" ofType="String" column="{industryId=brand_industry_two}"
+                    select="selectIndustryName"/>
+        <collection property="industryLevelOneName" ofType="String" column="{industryId=brand_industry_one}"
+                    select="selectIndustryName"/>
+    </resultMap>
+
+    <select id="selectIndustryName" resultType="String">
+        select industry_name from tbl_industry where industry_id=#{industryId}
+    </select>
+    <select id="findBusinessList" resultType="com.pointcoil.entity.BusinessEntity">
+        select business_id,businessType(business_type) as business_type, business_name,business_describe , businessLevel(business_level)as business_level ,  if(business_open=0,'未公开','公开') as business_open, if(business_unsold=0,'未售','已售') as business_unsold
+        ,screenshot_img,thermodynamic_chart , city , business_area , create_time from tbl_business
+        where brand_id = #{brandId,jdbcType=VARCHAR}
+    </select>
+    <select id="findLabelList" resultType="com.pointcoil.entity.LabelEntity">
+        select label_id,label_name,label_remarks from tbl_label where brand_id = #{brandId,jdbcType=VARCHAR}
+    </select>
+    <select id="findSubAccount" resultType="com.pointcoil.entity.SubAccountEntity">
+        select id , user_name , if(sex = 0,'女','男') as sex,user_phone,user_email from tbl_user where parent_id = #{id}
+    </select>
+    <insert id="userAdd">
+        insert into tbl_user
+        (id,user_name,user_phone,user_email,enterprise_name,make_name,to_examine,is_members,parent_id,businessLicense)
+        values
+        (
+        replace(uuid(),'-',''),#{registerDTO.userName},#{registerDTO.userPhone},#{registerDTO.userEmail},#{registerDTO.enterpriseName},#{registerDTO.makeName}
+        ,'1','0','0',#{registerDTO.businessLicense}
+        )
+    </insert>
+    <select id="findUserByExamine" resultType="com.pointcoil.entity.MapUserEntity">
+        select id , user_name as userName,user_phone as userPhone,user_email as userEmail,enterprise_name as enterpriseName,make_name as makeName,businessLicense from tbl_user where to_examine = '0' and parent_id = '0'
+    </select>
+    <update id="updUser">
+        update tbl_user
+        <set>
+            <if test="registerDTO.userName!='' and registerDTO.userName!=null">
+                user_name = #{registerDTO.userName,jdbcType=VARCHAR},
+            </if>
+            <if test="registerDTO.userPhone!='' and registerDTO.userPhone!= null">
+                user_phone  = #{registerDTO.userPhone,jdbcType=VARCHAR},
+            </if>
+            <if test="registerDTO.userEmail!='' and registerDTO.userEmail!= null">
+                user_email  = #{registerDTO.userEmail,jdbcType=VARCHAR},
+            </if>
+            <if test="registerDTO.enterpriseName!='' and registerDTO.enterpriseName!= null">
+                enterprise_name  = #{registerDTO.enterpriseName,jdbcType=VARCHAR},
+            </if>
+            <if test="registerDTO.makeName!='' and registerDTO.makeName!= null">
+                make_name  = #{registerDTO.makeName,jdbcType=VARCHAR},
+            </if>
+            <if test="type!='' and type!= null">
+                to_examine  = #{type,jdbcType=VARCHAR},
+            </if>
+            <if test="registerDTO.businessLicense!='' and registerDTO.businessLicense!= null">
+                businessLicense  = #{registerDTO.businessLicense,jdbcType=VARCHAR},
+            </if>
+                audit = '1',
+        </set>
+        <where>
+            id = #{id,jdbcType=VARCHAR}
+        </where>
+    </update>
+    <select id="findResultList" resultType="com.pointcoil.entity.MapUserEntity">
+        select id , user_name as userName,user_phone as userPhone,user_email as userEmail,enterprise_name as enterpriseName,make_name as makeName,businessLicense , to_examine as toExamine from tbl_user where audit = '1'
+        order by create_time
+    </select>
+    <update id="delUserAudit">
+        update tbl_user
+        <set>
+            audit = '2'
+        </set>
+        where
+        id = #{id}
+    </update>
+    <update id="userMemberAdd">
+        update tbl_user
+        <set>
+            is_members = #{isMembers},
+            star_time = #{date},
+            end_time = #{s}
+        </set>
+        where id = #{id}
+    </update>
+    <delete id="deleteRule">
+        delete from tbl_thermodynamic_rule
+        where id = #{id,jdbcType=VARCHAR}
+    </delete>
+</mapper>

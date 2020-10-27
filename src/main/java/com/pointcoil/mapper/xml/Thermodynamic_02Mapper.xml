@@ -1,0 +1,45 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.pointcoil.mapper.Thermodynamic_02Mapper">
+
+    <cache type="com.pointcoil.conf.MybatisRedisCache">
+        <property name="eviction" value="LRU" />
+        <property name="flushInterval" value="6000000" />
+        <property name="size" value="1024" />
+        <property name="readOnly" value="false" />
+    </cache>
+
+    <select id="selectHeatRule" resultType="java.util.Map">
+        select firstClassClassification ,twoLevelClassification,threeLevelClassification,minCount from tbl_thermodynamic_rule
+        where thermodynamic_id = #{heatDTO.heatMapId,jdbcType=VARCHAR} and city LIKE CONCAT(#{heatDTO.city,jdbcType=VARCHAR},'%')
+    </select>
+    <!--time is not null and starClass is not null-->
+    <select id="selectThermodynamic" resultType="com.pointcoil.dto.map.HeatDTO$HeatDataDTO">
+            select COUNT(1) as count,shopName from tbl_thermodynamic_data where
+            city LIKE CONCAT(#{heatDTO.city,jdbcType=VARCHAR},'%')
+            and firstClassClassification = #{map1.firstClassClassification}
+            and twoLevelClassification = #{map1.twoLevelClassification}
+            <if test="map1.threeLevelClassification != null and map1.threeLevelClassification !=''">
+                and threeLevelClassification = #{map1.threeLevelClassification}
+            </if>
+            <if test="map1.firstClassClassification == '丽人|购物'.toString() and map1.twoLevelClassification == '化妆品'.toString()">
+                and shopName not REGEXP '安利|玫琳凯|完美'
+            </if>
+            <if test="heatDTO.heatType == 3">
+                and shopName not REGEXP '宿|舍'
+            </if>
+            GROUP BY shopName
+            <if test="heatDTO.heatType != 3">
+                HAVING count > #{map1.minCount};
+            </if>
+    </select>
+
+    <update id="upd">
+        update tbl_core
+        <set>
+            count = count+1
+        </set>
+        where id = 1
+    </update>
+
+</mapper>

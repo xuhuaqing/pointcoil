@@ -1,0 +1,258 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="com.pointcoil.mapper.MapBusinessZoneMapper">
+
+    <cache type="com.pointcoil.conf.MybatisRedisCache">
+        <property name="eviction" value="LRU" />
+        <property name="flushInterval" value="6000000" />
+        <property name="size" value="1024" />
+        <property name="readOnly" value="false" />
+    </cache>
+
+        <select id="selectCreateBusiness" resultType="Integer">
+            select count(0) from tbl_business where user_id = #{userId}
+        </select>
+
+
+        <insert id="insertBusinessZone">
+            insert  tbl_business
+            <set>
+                business_id = #{businessZoneDTO.xxx},
+                <if test="businessZoneDTO.brandId !=null and businessZoneDTO.brandId != '' ">
+                    brand_id = #{businessZoneDTO.brandId},
+                </if>
+                <if test="businessZoneDTO.userId != null and businessZoneDTO.userId != ''">
+                    user_id = #{businessZoneDTO.userId},
+                </if>
+                <if test="s != null and s != ''">
+                    lng_and_lat = #{s},
+                </if>
+                <if test="replace1!=null and replace1 != ''">
+                    report_id = #{replace1},
+                </if>
+                <if test="businessZoneDTO.radius != null and businessZoneDTO.radius != ''">
+                    radius = #{businessZoneDTO.radius},
+                </if>
+                <if test="businessZoneDTO.businessType &gt; -1 ">
+                    business_type = #{businessZoneDTO.businessType},
+                </if>
+                <if test="businessZoneDTO.businessName != null and businessZoneDTO.businessName != ''">
+                    business_name = #{businessZoneDTO.businessName},
+                </if>
+                <if test="businessZoneDTO.businessDescribe != null and businessZoneDTO.businessDescribe != ''">
+                    business_describe = #{businessZoneDTO.businessDescribe},
+                </if>
+                <if test="businessZoneDTO.businessLevel &gt; -1">
+                    business_level = #{businessZoneDTO.businessLevel},
+                </if>
+                <if test="businessZoneDTO.businessOpen &gt; -1">
+                    business_open = #{businessZoneDTO.businessOpen},
+                </if>
+                <if test="businessZoneDTO.businessUnsold &gt; -1 ">
+                    business_unsold = #{businessZoneDTO.businessUnsold},
+                </if>
+                <if test="businessZoneDTO.screenshotImg != null and businessZoneDTO.screenshotImg !=''">
+                    screenshot_img = #{businessZoneDTO.screenshotImg},
+                </if>
+                <if test="businessZoneDTO.thermodynamicChart != null and businessZoneDTO.thermodynamicChart !=''">
+                    thermodynamic_chart = #{businessZoneDTO.thermodynamicChart},
+                </if>
+                <if test="businessZoneDTO.city != null and businessZoneDTO.city !=''">
+                    city = #{businessZoneDTO.city},
+                </if>
+
+                <if test="businessZoneDTO.district != null and businessZoneDTO.district !=''">
+                    district = #{businessZoneDTO.district},
+                </if>
+                <if test="businessZoneDTO.businessArea != null and businessZoneDTO.businessArea != ''">
+                    business_area = #{businessZoneDTO.businessArea,jdbcType=VARCHAR},
+                </if>
+                <if test="businessZoneDTO.province != null and businessZoneDTO.province != ''">
+                    province = #{businessZoneDTO.province,jdbcType=VARCHAR}
+                </if>
+            </set>
+
+        </insert>
+    <select id="showBusinessZone" resultMap="businessZoneInit">
+        select business_id , lng_and_lat ,report_id,radius ,business_type , business_level ,business_name , business_open ,business_unsold from tbl_business
+        <where>
+            city like concat(#{showBusinessZoneDTO.cityName,jdbcType=VARCHAR},'%')
+            <if test="showBusinessZoneDTO.businessOpen == 0 and showBusinessZoneDTO.all != 1 ">
+               and  business_open = #{showBusinessZoneDTO.businessOpen,jdbcType=INTEGER}
+            </if>
+            <if test="showBusinessZoneDTO.businessOpen == 1 and showBusinessZoneDTO.all != 1 ">
+                and  business_open = #{showBusinessZoneDTO.businessOpen,jdbcType=INTEGER}
+            </if>
+            <if test="showBusinessZoneDTO.businessUnsold == 1 and showBusinessZoneDTO.all != 1 ">
+                and  business_unsold = #{showBusinessZoneDTO.businessUnsold,jdbcType=INTEGER}
+            </if>
+            <if test="showBusinessZoneDTO.businessUnsold == 0 and showBusinessZoneDTO.all != 1 ">
+                and  business_unsold = #{showBusinessZoneDTO.businessUnsold,jdbcType=INTEGER}
+            </if>
+            and brand_id =#{showBusinessZoneDTO.brandId,jdbcType=VARCHAR}
+        </where>
+        order by create_time desc
+    </select>
+
+    <select id="showBusinessZoneInit" resultMap="businessZoneInit">
+         select business_id , lng_and_lat ,report_id,radius ,business_type , business_level ,business_name from tbl_business
+         where brand_id =#{brandId,jdbcType=VARCHAR} and
+           city like concat(#{cityName},'%')
+          order by create_time desc
+    </select>
+
+    <resultMap id="businessZoneInit" type="com.pointcoil.dto.map.BusinessZoneDTO$SBusinessZoneDTO">
+        <id column="business_id" property="businessId"/>
+        <result column="lng_and_lat" property="lngAndLat"/>
+        <result column="report_id" property="reportId"/>
+        <result column="radius" property="radius"/>
+        <result column="business_type" property="businessType"/>
+        <result column="business_level" property="businessLevel"/>
+        <result column="business_name" property="businessName"/>
+        <result column="business_open" property="businessOpen"/>
+        <result column="business_unsold" property="businessUnsold"/>
+    </resultMap>
+
+    <select id="showBusinessReport" resultType="java.util.Map">
+        select report_id as reportId,businessZoneName,followNum,qrCodeImg,screenshotImg,city,province,cityData,FORMAT(area,2) as area,residentPopulation,
+        villageNum,officeNum,villageName,officeName,gatherGuestsNum,gatherGuestsName,gatherGuests,
+        oneIndustryCount,twoLevelIndustry,twoIndustryCount,businessLevel,thermodynamicChart,totalLookCount,totalShareCount from tbl_report
+        where report_id  =#{businessReport.reportId,jdbcType=VARCHAR}
+    </select>
+    <update id="updateBusinessCount">
+        update tbl_report
+        <set>
+            totalLookCount = totalLookCount+1,
+            totalShareCount = totalShareCount+1
+        </set>
+        where report_id = #{reportId,jdbcType=VARCHAR}
+    </update>
+    <update id="businessCountByLook">
+        update tbl_report
+        <set>
+            totalLookCount = totalLookCount+1
+        </set>
+        where report_id = #{reportId,jdbcType=VARCHAR}
+    </update>
+    <insert id="insertBusinessRecord">
+        insert
+        tbl_business_user
+        <set>
+            open_id = #{businessReport.openId},
+            reportId = (select report_id from tbl_qrCode where qr_code = #{businessReport.reportId}),
+            business_name = CONCAT((select business_name from tbl_business where report_id = #{reportId}),'(',(select brand_title from tbl_brand where brand_id = (select brand_id from tbl_business where report_id = #{reportId})),')'),
+            son_id = (select son_id from tbl_qrCode where qr_code = #{businessReport.reportId}),
+            user_id = (select user_id from tbl_qrCode where qr_code = #{businessReport.reportId}),
+            brand_name = (select brand_title from tbl_brand where brand_id = (select brand_id from tbl_business where report_id = #{reportId}))
+        </set>
+    </insert>
+    <select id="isFollow" resultType="java.lang.Integer">
+        select count(1) from tbl_business_user where open_id =#{openId,jdbcType=VARCHAR} and
+        reportId = #{reportId,jdbcType=VARCHAR}
+    </select>
+    <select id="showMyFollowBusiness" resultType="java.util.Map">
+        select reportId , business_name as businessName from tbl_business_user where open_id  = #{userEntity.openId,jdbcType=VARCHAR} and reportId != ''
+    </select>
+    <select id="businessFollowPeo" resultType="java.util.Map">
+        select user_name as userName ,avatar ,telephone from tbl_smallpro_user where open_id in (
+            select open_id from tbl_business_user where reportId  = #{businessReport.reportId,jdbcType=VARCHAR}
+        )
+    </select>
+
+    <select id="showBusinessZoneById" resultMap="showBusinessZoneById">
+        select business_name,business_describe ,business_level , business_open,business_unsold,business_type from tbl_business
+        where business_id = #{showBusinessById.businessId,jdbcType=VARCHAR}
+    </select>
+
+    <resultMap id="showBusinessZoneById" type="com.pointcoil.dto.map.BusinessZoneDTO$UpdateBusiness">
+        <result property="businessName" column="business_name"/>
+        <result property="businessDescribe" column="business_describe"/>
+        <result property="businessLevel" column="business_level"/>
+        <result property="businessOpen" column="business_open"/>
+        <result property="businessUnsold" column="business_unsold"/>
+        <result property="businessType" column="business_type"/>
+    </resultMap>
+
+
+    <update id="upd">
+        update tbl_core
+        <set>
+            count = count+1
+        </set>
+        where id = 1
+    </update>
+    <update id="updateBusinessZone">
+        update tbl_business
+        <set>
+            <trim suffixOverrides=",">
+                <if test="updateBusiness.businessType != null and updateBusiness.businessType != ''">
+                business_type = #{updateBusiness.businessType,jdbcType=VARCHAR},
+                </if>
+                <if test="updateBusiness.businessName != null and updateBusiness.businessName != ''">
+                    business_name = #{updateBusiness.businessName,jdbcType=VARCHAR},
+                </if>
+                <if test="updateBusiness.businessLevel != null and updateBusiness.businessLevel != ''">
+                    business_level = #{updateBusiness.businessLevel,jdbcType=VARCHAR},
+                </if>
+                <if test="updateBusiness.businessDescribe != null and updateBusiness.businessDescribe != ''">
+                    business_describe = #{updateBusiness.businessDescribe,jdbcType=VARCHAR},
+                </if>
+                <if test="updateBusiness.businessUnsold != null and updateBusiness.businessUnsold != ''">
+                    business_unsold = #{updateBusiness.businessUnsold,jdbcType=VARCHAR},
+                </if>
+                <if test="updateBusiness.businessOpen != null and updateBusiness.businessOpen != ''">
+                    business_open = #{updateBusiness.businessOpen,jdbcType=VARCHAR},
+                </if>
+            </trim>
+        </set>
+        <where>
+            business_id = #{updateBusiness.businessId}
+        </where>
+    </update>
+    <select id="zoomBusiness" resultType="com.pointcoil.dto.map.BusinessZoneDTO$ZoomBusinessDTO">
+        select q.district as address,q.count as area, s.longitude as lng,s.latitude as lat from (select district , count(1) as count from tbl_business where brand_id = #{businessAddress.brandId,jdbcType=VARCHAR} and district is not null  and business_type != 3
+        GROUP BY district ) as q left join tbl_provinces as s on q.district = s.cityName
+        where INSTR(s.mergerName,#{businessAddress.city,jdbcType=VARCHAR})>0
+    </select>
+    <select id="zoomBusinessBy20" resultType="com.pointcoil.dto.map.BusinessZoneDTO$ZoomBusinessDTO">
+        select q.city as address,q.count as area, s.longitude as lng,s.latitude as lat from (select city , count(1) as count from tbl_business where brand_id = #{businessAddress.brandId,jdbcType=VARCHAR}  and business_type !=3
+        GROUP BY city ) as q left join tbl_provinces as s on q.city = s.cityName
+        where INSTR(s.mergerName,#{i,jdbcType=VARCHAR})>0
+    </select>
+    <select id="selectProvince" resultType="java.lang.String">
+        select split(mergerName,',',2) as s from tbl_provinces where  INSTR(mergerName,#{city})>0 limit 1
+    </select>
+    <select id="selectCustomized" resultType="com.pointcoil.dto.map.BusinessZoneDTO$I1">
+            select lonAndLat , radius,type from tbl_customized where brand_id = #{brandId}
+    </select>
+    <delete id="deleteCustomized">
+        delete from tbl_customized
+        where id =#{customizedId}
+    </delete>
+    <update id="updThermodynamicChart">
+        update tbl_report
+        <set>
+            thermodynamicChart = #{pictureChar.thermodynamicChart}
+        </set>
+        where report_id =#{pictureChar.reportId}
+    </update>
+    <update id="updateBusiness">
+        update tbl_business
+        <set>
+            thermodynamic_chart = #{pictureChar.thermodynamicChart}
+        </set>
+        where report_id =#{pictureChar.reportId}
+    </update>
+    <delete id="deleteBusiness">
+        delete from tbl_business where business_id =#{businessId}
+    </delete>
+    <select id="selectBusinessOpen" resultType="java.lang.Integer">
+      select business_open from tbl_business where report_id = #{reportId}
+    </select>
+    <select id="selectReportId" resultType="java.lang.String">
+        select report_id from tbl_qrCode
+        where qr_code = #{reportId,jdbcType=VARCHAR}
+    </select>
+
+
+</mapper>

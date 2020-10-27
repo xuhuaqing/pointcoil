@@ -1,0 +1,43 @@
+spring:
+  application:
+    name: pointColi
+  datasource:
+    driverClassName: com.mysql.cj.jdbc.Driver
+  profiles:
+    #active: test
+     active: dev
+  thymeleaf:
+    cache: false
+    mode: LEGACYHTML5
+    encoding: UTF-8
+    servlet:
+      content-type: text/html
+  restart:
+    enabled: true
+  devtools:
+    restart:
+    additional-paths: src/main/java
+  mvc:
+    view:
+      prefix: /pointcoli/resources/templates/
+      suffix: .html
+server:
+  servlet:
+    context-path: /pointcoil
+  port: 8080
+mybatis:
+  mapperLocations: classpath*:com/pointcoil/mapper/xml/*Mapper.xml
+  configuration:
+    map-underscore-to-camel-case: true
+    cache-enabled: true
+    log-impl: org.apache.ibatis.logging.stdout.StdOutImpl
+logging:
+  level:
+    org:
+      mybatis: debug
+    com:
+      apche:
+        ibatis: debug
+    java:
+      sql: debug
+

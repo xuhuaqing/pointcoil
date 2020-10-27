@@ -1,0 +1,61 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.pointcoil.mapper.PayMapper">
+
+    <insert id="aliPay">
+        insert into
+        tbl_pay (trade_no,user_id,cityName,is_pay,`time`,total_money,pay_type)
+        values
+        (#{card},#{aliPayDTO.userId},#{s},0,#{aliPayDTO.time} ,#{aliPayDTO.totalAmount},#{i})
+    </insert>
+    <update id="pay">
+        update tbl_pay
+        <set>
+            is_pay = 1
+        </set>
+        where trade_no = #{trad_no}
+    </update>
+    <!--<update id="updateMember">
+        update tbl_user
+            <set>
+                is_members = (select member_level from tbl_member where member_id = (select member_id from tbl_pay where trade_no = #{trad_no})),
+                star_time = DATE_SUB(curdate(),INTERVAL 0 DAY),
+                end_time = DATE_ADD(DATE_SUB(curdate(),INTERVAL 0 DAY), INTERVAL (select year from tbl_pay  where trade_no = #{trad_no}) YEAR)
+            </set>
+        where id = (select user_id from tbl_pay where trade_no = #{trad_no}) or parent_id = (select user_id from tbl_pay where trade_no = #{trad_no})
+    </update>-->
+    <select id="select" resultType="java.lang.Integer">
+        select count(1) from tbl_pay where is_pay = 1 and user_id= #{mapCommonDTO.userId}
+    </select>
+    <select id="selectUserId" resultType="java.lang.String">
+        SELECT user_id from tbl_pay where trade_no =#{trad_no}
+    </select>
+    <select id="selectMember" resultType="java.lang.Double">
+        select if(#{year} = '1',one_element,two_element)* (customized_server/10) from tbl_member
+        where member_id = #{memberId,jdbcType=VARCHAR}
+    </select>
+    <select id="findCityAndTime" resultType="java.util.Map">
+        select cityName,`time` from tbl_pay
+        where trade_no =#{trad_no} and is_pay = 1
+    </select>
+    <insert id="updateMember">
+        insert into tbl_customized_thermodynamic values
+            (replace(uuid(),'-',''),#{userId} ,#{cityName} , DATE_SUB(curdate(),INTERVAL 0 DAY), date_add(DATE_SUB(curdate(),INTERVAL 0 DAY), interval #{s} MONTH))
+
+    </insert>
+    <select id="purchased" resultType="java.lang.Integer">
+        select count(1) from tbl_customized_thermodynamic
+        where user_id = #{userId} and city_name = #{s}
+    </select>
+    <update id="updaMemberTime">
+        update tbl_customized_thermodynamic
+        <set>
+            end_time =  date_add(( select s.end_time from (select end_time from tbl_customized_thermodynamic where user_id = #{userId} and city_name = #{s})as s   ), interval #{time} MONTH)
+        </set>
+        where user_id = #{userId} and city_name = #{s}
+    </update>
+    <select id="get" resultType="java.lang.String">
+        select cityName from tbl_pay
+        where trade_no =#{trad_no} and is_pay = 1
+    </select>
+</mapper>

@@ -1,0 +1,44 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.pointcoil.mapper.OfficialWebsiteServiceMapper">
+
+    <select id="selectByOne" resultType="String">
+      select picture_img  from tbl_admin_officialwebsite where picture_type = #{single,javaType=string}
+    </select>
+    <select id="selectByTwo" resultType="com.pointcoil.dto.official.HomePageDTO$FourPicture">
+      select picture_img as FourPictureImg , picture_words as numericalValue from tbl_admin_officialwebsite where picture_type = #{matchmakerNum,javaType=string}
+    </select>
+    <select id="selectByThree" resultType="string">
+       select picture_img  from tbl_admin_officialwebsite where picture_type = #{singleNum,javaType=string}
+    </select>
+    <select id="selectByFour" resultType="com.pointcoil.dto.official.HomePageDTO$ProductCharacteristics">
+        select picture_img as productImage,picture_connect as productTitle,picture_text as productText from  tbl_admin_officialwebsite where picture_type = #{matchmaker,javaType=string}
+    </select>
+    <select id="selectByNews" resultType="com.pointcoil.dto.official.HomePageDTO$News">
+        select picture_connect as newsTitle,picture_text as newsText from tbl_admin_officialwebsite where picture_type = #{niceNum,javaType=string} order by create_time desc limit 4
+    </select>
+    <select id="selectByAboutUs" resultType="com.pointcoil.dto.official.HomePageDTO$AboutUs">
+        select picture_connect as aboutUsTitle,picture_words as aboutUsText from tbl_admin_officialwebsite where picture_type = #{sevenInt,javaType=string}
+    </select>
+    <select id="selectByHistory" resultType="com.pointcoil.dto.official.HomePageDTO$History">
+        select picture_connect as year ,picture_words as event from tbl_admin_officialwebsite where picture_type = #{fiveInt,javaType=string}
+    </select>
+    <select id="selectByPartner" resultType="com.pointcoil.dto.official.HomePageDTO$Partner">
+        select picture_img as partnerImages, picture_connect as partnerLink from tbl_admin_officialwebsite where picture_type= #{sixString,javaType=string}
+    </select>
+    <select id="selectNewsAll" resultType="com.pointcoil.dto.official.HomePageDTO$NewsByLimit">
+        select id , picture_connect as newsTitle,picture_text as newsText from  tbl_admin_officialwebsite where picture_type= #{niceNum,javaType=string} order by create_time desc
+    </select>
+    <select id="newsDetails" resultType="string">
+        select picture_text from tbl_admin_officialwebsite where id =#{newsId,javaType=string}
+    </select>
+    <update id="addBrand">
+        update tbl_admin_officialwebsite
+        <set>
+            picture_words = picture_words + #{insertLength}
+        </set>
+        <where>
+            id = #{f0cb9bba1bdc11ea97920242ac110003,jdbcType=VARCHAR}
+        </where>
+    </update>
+</mapper>

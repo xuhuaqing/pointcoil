@@ -1,0 +1,82 @@
+<!DOCTYPE html>
+<html lang="eni">
+<head>
+    <meta charset="UTF-8">
+    <meta name="renderer" content="webkit">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1">
+    <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+    <title>表单</title>
+    <link rel="stylesheet" href="../../static/layuiadmin/layui/css/layui.css" media="all">
+    <link rel="stylesheet" href="../../static/layuiadmin/style/admin.css" media="all">
+    <style>
+        .layui-form-label {
+            width: 100px;
+        }
+
+        .layui-input-block {
+            margin-left: 130px;
+            min-height: 36px
+        }
+    </style>
+</head>
+<body class="body">
+<fieldset class="layui-elem-field layui-field-title" style="margin-top: 20px;">
+    <legend>添加行业</legend>
+</fieldset>
+<form class="layui-form layui-from-pane" action="/admin/poster/addPoster" style="margin-top:20px" method="post">
+    <div class="layui-form-item">
+        <label class="layui-form-label">一级行业名称</label>
+        <div class="layui-input-block">
+            <input type="text" name="industryName" lay-verify="required" id="refundReason" placeholder="请输入"
+                   autocomplete="off"
+                   class="layui-input">
+        </div>
+    </div>
+    <div class="layui-form-item" style="margin-top:40px">
+        <div class="layui-input-block">
+            <button class="layui-btn  layui-btn-submit " lay-submit="" lay-filter="demo1" id="demo1">立即提交</button>
+        </div>
+    </div>
+</form>
+<script src="../../static/layuiadmin/layui/layui.js"></script>
+<script>
+    layui.config({
+        //静态资源所在路径
+        base: '../../static/layuiadmin/'
+    }).extend({
+        //主入口模块
+        index: 'lib/index'
+    }).use(['form', 'layer', 'jquery', 'laydate', 'upload', 'index'], function () {
+        var form = layui.form
+            , layer = layui.layer
+            , $ = layui.jquery,
+            table = layui.table,
+            upload = layui.upload;
+        form.on('submit(demo1)', function (data) {
+            layui.$.ajax({
+                url: layui.data(layui.setter.tableName)['admin_host'] + '/system/addIndustry',
+                type: 'POST',
+                dataType: 'json',
+                data: data.field,
+                success: function (res) {
+                    if (res['code'] == 0) {
+                        layui.layer.closeAll('loading');
+                        layui.layer.load(2);
+                        layui.layer.msg("添加成功", {icon: 6});
+                        setTimeout(function () {
+                            window.parent.location.reload();//修改成功后刷新父界面
+                        }, 1000);
+                        //加载层-风格
+
+                    } else {
+                        layui.layer.msg(res.msg, {icon: 5});
+                    }
+                }
+            })
+            return false;
+        });
+
+    });
+</script>
+</body>
+</html>

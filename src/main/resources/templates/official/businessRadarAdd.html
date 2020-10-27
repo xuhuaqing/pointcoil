@@ -1,0 +1,111 @@
+<!DOCTYPE html>
+<html lang="eni">
+<head>
+    <meta charset="UTF-8">
+    <meta name="renderer" content="webkit">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1">
+    <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+    <title>表单</title>
+    <link rel="stylesheet" href="../../static/layuiadmin/layui/css/layui.css" media="all">
+    <link rel="stylesheet" href="../../static/layuiadmin/style/admin.css" media="all">
+    <style>
+        .layui-form-label {
+            width: 100px;
+        }
+
+        .layui-input-block {
+            margin-left: 130px;
+            min-height: 36px
+        }
+    </style>
+</head>
+<body class="body">
+<fieldset class="layui-elem-field layui-field-title" style="margin-top: 20px;">
+    <legend>添加轮播图</legend>
+</fieldset>
+
+<form class="layui-form layui-from-pane" action="/admin/poster/addPoster" style="margin-top:20px" method="post">
+    <div class="layui-form-item">
+        <label class="layui-form-label">产品介绍图</label>
+        <img class="layui-upload-img" id="carouselImageUrl1" name="pictureImg1" style="width:80px;height:100px;" border="0">
+        <button type="button" class="layui-btn" id="img">上传图片</button>
+        <div class="layui-upload">
+            <input type="hidden" id="carouselImageUrl" lay-verify="required" name="pictureImg">
+            <input type="hidden"  lay-verify="required" name="pictureType" value="3">
+            <p id="demoText"></p>
+        </div>
+    </div>
+    <div class="layui-form-item" style="margin-top:40px">
+        <div class="layui-input-block">
+            <button class="layui-btn  layui-btn-submit " lay-submit="" lay-filter="demo1" id="demo1">立即提交</button>
+        </div>
+    </div>
+</form>
+<script src="../../static/layuiadmin/layui/layui.js"></script>
+<script>
+    layui.config({
+        //静态资源所在路径
+        base: '../../static/layuiadmin/'
+    }).extend({
+        //主入口模块
+        index: 'lib/index'
+    }).use(['form', 'layer', 'jquery', 'laydate', 'upload', 'index'], function () {
+        var form = layui.form
+            , layer = layui.layer
+            , $ = layui.jquery,
+            table = layui.table,
+            upload = layui.upload;
+        var uploadInst = upload.render({
+            elem: '#img'
+            , url: layui.data(layui.setter.tableName)['admin_host'] + '/admin/adminUpload/upload'
+            , before: function (obj) {
+                //预读本地文件示例，不支持ie8
+                obj.preview(function (index, file, result) {
+                    $('#carouselImageUrl1').attr('src', result); //图片链接（base64）
+                });
+            }
+            , done: function (res) {
+                //如果上传失败
+                if (res.code > 0) {
+                    return layer.msg('上传失败');
+                }
+                //上传成功
+
+                layui.$('#carouselImageUrl').attr('value', res.data.src); //图片链接（base64）
+            }
+            , error: function () {
+                //演示失败状态，并实现重传
+                var demoText = $('#demoText');
+                demoText.html('<span style="color: #FF5722;">上传失败</span> <a class="layui-btn layui-btn-xs demo-reload">重试</a>');
+                demoText.find('.demo-reload').on('click', function () {
+                    uploadInst.upload();
+                });
+            }
+        });
+        form.on('submit(demo1)', function (data) {
+            layui.$.ajax({
+                url: layui.data(layui.setter.tableName)['admin_host'] + '/adminOfficial/addCarousel',
+                type: 'POST',
+                dataType: 'json',
+                data: data.field,
+                success: function (res) {
+                    if (res['code'] == 0) {
+                        layui.layer.closeAll('loading');
+                        layui.layer.load(2);
+                        layui.layer.msg("添加成功", {icon: 6});
+                        setTimeout(function () {
+                            window.parent.location.reload();//修改成功后刷新父界面
+                        }, 1000);
+                        //加载层-风格
+                    } else {
+                        layui.layer.msg(res.msg, {icon: 5});
+                    }
+                }
+            })
+            return false;
+        });
+
+    });
+</script>
+</body>
+</html>
