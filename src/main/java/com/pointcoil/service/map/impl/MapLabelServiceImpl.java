@@ -99,10 +99,10 @@ public class MapLabelServiceImpl implements MapLabelService {
         if(i>=memberDTO.getLabelNum()){
             return ResponseUtil.errorToClient(MSG_001010);
         }
-        Integer p = mapLabelMapper.selectLabelName(labelDTO);
+      /*  Integer p = mapLabelMapper.selectLabelName(labelDTO);
         if(p>0){
             return ResponseUtil.errorMsgToClient(MSG_001017);
-        }
+        }*/
         /**
          * 创建标签
          */

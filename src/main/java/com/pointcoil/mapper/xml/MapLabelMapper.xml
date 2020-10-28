@@ -75,7 +75,10 @@
 
 
     <delete id="deleteLabel">
-        delete from tbl_label where label_id = #{labelId.labelId,jdbcType=VARCHAR}
+        delete from tbl_label where label_id in
+        <foreach collection="labelId" index="index" item="labelId" separator="," open="(" close=")">
+            #{labelId}
+        </foreach>
     </delete>
     <select id="selectLabelById" resultType="com.pointcoil.dto.map.LabelDTO$SelectLabelById">
         select label_id , user_id ,label_name ,label_remarks ,tbl_label_style.label_style_id,label_style_img from

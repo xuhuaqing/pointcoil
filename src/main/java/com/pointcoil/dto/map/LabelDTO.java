@@ -146,7 +146,7 @@ public class LabelDTO extends MapCommonDTO{
     @Data
     public static class LabelId extends MapCommonDTO{
         @NotNull(message = "标签id不能为空")
-        private String labelId;
+        private List<String> labelId;
     }
 
     @Data
